@@ -1,0 +1,5 @@
+fwupgrade:
+    ImageName:
+        Valid_Image_name: "SR203_DEV_24Q4_sprint_20241015234322sdy_NG"
+    Url:
+        Valid_url: "http://dac15cdlserver.ae.ccp.xcal.tv:8080"
