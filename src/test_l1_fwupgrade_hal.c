@@ -1177,9 +1177,28 @@ int test_fwupgrade_hal_l1_register(void)
     Valid_Image_name = (char *)malloc(256 * sizeof(char));
     Valid_url = (char *)malloc(1024 * sizeof(char));
 
-    UT_KVP_PROFILE_GET_STRING("fwupgrade/ImageName/Valid_Image_name", Valid_Image_name);
-    UT_KVP_PROFILE_GET_STRING("fwupgrade/Url/Valid_url", Valid_url);
 
+    // Get the Image name from user input
+    printf("Enter the valid image name: ");
+    if (fgets(Valid_Image_name, 256, stdin) != NULL) {
+        // Remove newline character if present
+        size_t len = strlen(Valid_Image_name);
+        if (len > 0 && Valid_Image_name[len-1] == '\n') {
+            Valid_Image_name[len-1] = '\0';
+        }
+    }
+
+    // Get the URL from user input
+    printf("Enter the valid URL: ");
+    if (fgets(Valid_url, 1024, stdin) != NULL) {
+        // Remove newline character if present
+        size_t len = strlen(Valid_url);
+        if (len > 0 && Valid_url[len-1] == '\n') {
+            Valid_url[len-1] = '\0';
+        }
+    }
+
+    // Print the values to confirm input
     printf("Valid_Image_name: %s\n", Valid_Image_name);
     printf("Valid_url: %s\n", Valid_url);
     // List of test function names and strings
@@ -1216,4 +1235,3 @@ int test_fwupgrade_hal_l1_register(void)
     
     return 0;
 }
-
