@@ -57,7 +57,7 @@ char *Valid_url;
 * **Test Procedure:**
 * | Variation / Step | Description | Test Data | Expected Result | Notes |
 * | :----: | --------- | ---------- |-------------- | ----- |
-* | 01 | Set download URL and filename | pUrl = "http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images", pfilename = "CGM4140COM_6.2p10s1_PROD_sey.bin" | SUCCESS | The fwupgrade_hal_set_download_url() API should successfully set the download URL and filename |
+* | 01 | Set download URL and filename | pUrl = "<user input url>", pfilename = "<User Input Filename>" | SUCCESS | The fwupgrade_hal_set_download_url() API should successfully set the download URL and filename |
 */
 void test_l1_fwupgrade_hal_positive1_set_download_url(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_positive1_set_download_url...");
@@ -212,7 +212,7 @@ void test_l1_fwupgrade_hal_negative1_set_download_url(void) {
 * **Test Procedure:**
 * | Variation / Step | Description | Test Data | Expected Result | Notes |
 * | :----: | --------- | ---------- |-------------- | ----- |
-* | 01 | Set download URL with NULL file name | pUrl = "http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images", pfilename = NULL | RETURN_ERR | Should return an error |
+* | 01 | Set download URL with NULL file name | pUrl = "<user input url>", pfilename = NULL | RETURN_ERR | Should return an error |
 */
 void test_l1_fwupgrade_hal_negative2_set_download_url(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_negative2_set_download_url...");
@@ -326,7 +326,7 @@ void test_l1_fwupgrade_hal_negative4_set_download_url(void) {
  * **Test Procedure:**
  * - | Variation / Step | Description                                              | Test Data                                                          | Expected Result                              | Notes              |
  * - | :---------------: | -------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------- | ------------------ |
- * - |       01          | Test setting the download URL with a filename exceeding   | pUrl = "http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images"         | result = fwupgrade_hal_set_download_url(...) | Should be failure |
+ * - |       01          | Test setting the download URL with a filename exceeding   | pUrl = "<user input url>"         | result = fwupgrade_hal_set_download_url(...) | Should be failure |
  *                      | the buffer size limit                                    | pfilename = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" |                                                  |                    |
  */
 void test_l1_fwupgrade_hal_negative5_set_download_url(void) {
@@ -366,7 +366,7 @@ void test_l1_fwupgrade_hal_negative5_set_download_url(void) {
  * **Test Procedure:**
  * | Variation / Step | Description | Test Data | Expected Result | Notes |
  * | :----: | --------- | ---------- |-------------- | ----- |
- * | 01 | Invoke the API with valid buffers for pUrl and pfilename | pUrl = "http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images", pfilename = "CGM4140COM_6.2p10s1_PROD_sey.bin" | Return status should be RETURN_OK | Should be successful |
+ * | 01 | Invoke the API with valid buffers for pUrl and pfilename | pUrl = "<User Input Url>", pfilename = "<User Input Filename>" | Return status should be RETURN_OK | Should be successful |
  */
 void test_l1_fwupgrade_hal_positive1_get_download_url(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_positive1_get_download_url...");
@@ -453,7 +453,7 @@ void test_l1_fwupgrade_hal_negative1_get_download_url(void) {
 * **Test Procedure:**
 * | Variation / Step | Description | Test Data | Expected Result | Notes |
 * | :----: | --------- | ---------- |-------------- | ----- |
-* | 01 | Invoke the API with NULL pfilename | pUrl = "http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images", pfilename = NULL | RETURN_ERR | Should be successful |
+* | 01 | Invoke the API with NULL pfilename | pUrl = "<User Input Url>", pfilename = NULL | RETURN_ERR | Should be successful |
 */
 void test_l1_fwupgrade_hal_negative2_get_download_url(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_negative2_get_download_url...");
@@ -1142,7 +1142,7 @@ void test_l1_fwupgrade_hal_negative1_update_and_factoryreset(void) {
  * **Test Procedure:**
  * | Variation / Step | Description | Test Data | Expected Result | Notes |
  * | :----: | --------- | ---------- |-------------- | ----- |
- * | 01 | First set of conditions | url = http://dac15cdlserver.ae.ccp.xcal.tv:8080/Images | Should successfully download and install firmware | Should be successful |
+ * | 01 | First set of conditions | url = <User Input Url> | Should successfully download and install firmware | Should be successful |
  */
 
 void test_l1_fwupgrade_hal_positive1_fwupgrade_hal_download_install(void)
