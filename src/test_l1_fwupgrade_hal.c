@@ -134,7 +134,7 @@ void test_l1_fwupgrade_hal_positive2_set_download_url(void) {
 * **Test Procedure:**
 * | Variation / Step | Description | Test Data | Expected Result | Notes |
 * | :----: | --------- | ---------- |-------------- | ----- |
-* | 01 | Invoking fwupgrade_hal_set_download_url with maximum length pUrl and valid pfilename | pUrl = "aaaaaaaaaaaaaaaaaaaaaaaaa...", pfilename = "WNXL11BWL_6.2p10s1_PROD_sey.bin" | Result = RETURN_OK | Should be successful |
+* | 01 | Invoking fwupgrade_hal_set_download_url with maximum length pUrl and valid pfilename | pUrl = "aaaaaaaaaaaaaaaaaaaaaaaaa...", pfilename = "valid image name" | Result = RETURN_OK | Should be successful |
 */
 
 void test_l1_fwupgrade_hal_positive3_set_download_url(void) {
@@ -175,7 +175,7 @@ void test_l1_fwupgrade_hal_positive3_set_download_url(void) {
 * **Test Procedure:**
 * | Variation / Step | Description | Test Data | Expected Result | Notes |
 * | :----: | --------- | ---------- | -------------- | ----- |
-* | 01 | Setting pUrl to NULL | pUrl = NULL, pfilename = TG4482A_6.2p10s1_PROD_sey.bin | RETURN_ERR | Should return an error |
+* | 01 | Setting pUrl to NULL | pUrl = NULL, pfilename = valid image name | RETURN_ERR | Should return an error |
 */
 void test_l1_fwupgrade_hal_negative1_set_download_url(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_negative1_set_download_url...");
@@ -412,7 +412,7 @@ void test_l1_fwupgrade_hal_positive1_get_download_url(void) {
  * **Test Procedure:**
  * | Variation / Step | Description | Test Data | Expected Result | Notes |
  * | :----: | --------- | ---------- |-------------- | ----- |
- * | 01 | Passing NULL pUrl | pUrl = NULL, pfilename = "TG4482A_6.2p10s1_PROD_sey.bin" | RETURN_ERR | Should return error status |
+ * | 01 | Passing NULL pUrl | pUrl = NULL, pfilename = "valid image name" | RETURN_ERR | Should return error status |
  */
 
 void test_l1_fwupgrade_hal_negative1_get_download_url(void) {
