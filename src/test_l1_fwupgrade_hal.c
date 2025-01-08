@@ -958,7 +958,7 @@ void test_l1_fwupgrade_hal_positive_2_reboot_ready(void) {
     UT_LOG("Entering test_l1_fwupgrade_hal_positive_2_reboot_ready...");
 
     ULONG value = 0;
-    system("echo \"Active\" > /tmp/.voice_call_status");
+    v_secure_system("echo \"Active\" > /tmp/.voice_call_status");
     INT result = fwupgrade_hal_reboot_ready(&value);
 
     UT_LOG("Invoking fwupgrade_hal_reboot_ready with pValue: valid memory location");
