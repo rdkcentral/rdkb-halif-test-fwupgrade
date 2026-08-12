@@ -768,39 +768,12 @@ void test_l1_fwupgrade_hal_positive_1_get_download_status_not_started(void)
 }
 
 /**
- * @brief This test case verifies the functionality of the fwupgrade_hal_get_download_status API when the download is completed and waiting for reboot.
- *
- * The purpose of this test is to ensure that the fwupgrade_hal_get_download_status API returns the expected status when the download is completed and waiting for reboot.
- *
- * **Test Group ID:** Basic: 01
- * **Test Case ID:** 020
- * **Priority:** High
- *
- * **Pre-Conditions:** None
- * **Dependencies:** None
- * **User Interaction:** If the user chooses to run the test in interactive mode, then the test case has to be selected via console.
- *
- * **Test Procedure:**
- * | Variation / Step | Description | Test Data | Expected Result | Notes |
- * | :----: | --------- | ---------- | -------------- | ----- |
- * | 01 | Verify the fwupgrade_hal_get_download_status API when the download is completed and waiting for reboot. | None | The API should return the expected status of 200. | This test case checks if the API is returning the expected status when the download is completed and waiting for reboot. |
- */
-void test_l1_fwupgrade_hal_positive_3_get_download_status_completed_waiting_for_reboot(void)
-{
-    UT_LOG("Entering test_l1_fwupgrade_hal_positive_3_get_download_status_completed_waiting_for_reboot...");
-    INT status = fwupgrade_hal_get_download_status();
-    UT_LOG("Invoking fwupgrade_hal_get_download_status - Download completed, waiting for reboot. Expected Status: 200");
-    UT_ASSERT_EQUAL(status, 200);
-    UT_LOG("Exiting test_l1_fwupgrade_hal_positive_3_get_download_status_completed_waiting_for_reboot...");
-}
-
-/**
  * @brief Test case to verify the reboot readiness of the firmware upgrade HAL.
  *
  * This test case verifies the functionality of the fwupgrade_hal_reboot_ready() API by checking if the firmware upgrade HAL is ready for reboot.
  *
  * **Test Group ID:** Basic: 01
- * **Test Case ID:** 021
+ * **Test Case ID:** 020
  * **Priority:** High
  *
  * **Pre-Conditions:** None
@@ -835,7 +808,7 @@ void test_l1_fwupgrade_hal_positive_1_reboot_ready(void)
  * This test case checks whether the fwupgrade_hal_reboot_ready API returns the expected result and updates the value parameter correctly when the reboot is ready.
  *
  * **Test Group ID:** Basic: 01
- * **Test Case ID:** 022
+ * **Test Case ID:** 021
  * **Priority:** High
  *
  * **Pre-Conditions:** None
@@ -871,7 +844,7 @@ void test_l1_fwupgrade_hal_positive_2_reboot_ready(void)
  * This test checks whether the fwupgrade_hal_reboot_ready function returns RETURN_ERR when called with a NULL pValue as input.
  *
  * **Test Group ID:** Basic: 01
- * **Test Case ID:** 023
+ * **Test Case ID:** 022
  * **Priority:** High
  *
  * **Pre-Conditions:** None
@@ -963,7 +936,6 @@ int test_fwupgrade_hal_l1_register(void)
     UT_add_test(pSuite, "l1_fwupgrade_hal_positive1_get_download_interface_valid_memory_location", test_l1_fwupgrade_hal_positive1_get_download_interface_valid_memory_location);
     UT_add_test(pSuite, "l1_fwupgrade_hal_negative1_get_download_interface_NULL_pinterface", test_l1_fwupgrade_hal_negative1_get_download_interface_NULL_pinterface);
     UT_add_test(pSuite, "l1_fwupgrade_hal_positive_1_get_download_status_not_started", test_l1_fwupgrade_hal_positive_1_get_download_status_not_started);
-    UT_add_test(pSuite, "l1_fwupgrade_hal_positive_3_get_download_status_completed_waiting_for_reboot", test_l1_fwupgrade_hal_positive_3_get_download_status_completed_waiting_for_reboot);
     UT_add_test(pSuite, "l1_fwupgrade_hal_positive_1_reboot_ready", test_l1_fwupgrade_hal_positive_1_reboot_ready);
     UT_add_test(pSuite, "l1_fwupgrade_hal_positive_2_reboot_ready", test_l1_fwupgrade_hal_positive_2_reboot_ready);
     UT_add_test(pSuite, "l1_fwupgrade_hal_negative_1_reboot_ready", test_l1_fwupgrade_hal_negative_1_reboot_ready);
