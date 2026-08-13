@@ -34,6 +34,7 @@
 #include <ut_log.h>
 #include "fwupgrade_hal.h"
 #include <string.h>
+#include <stdio.h>
 #include <ut_kvp.h>
 #include <ut_kvp_profile.h>
 #include <stdlib.h>
@@ -66,8 +67,8 @@ void test_l1_fwupgrade_hal_positive1_set_download_url(void)
     char pUrl[1024];
     char pfilename[256];
 
-    strcpy(pUrl, Valid_url);
-    strcpy(pfilename, Valid_Image_name);
+    snprintf(pUrl, sizeof(pUrl), "%s", (Valid_url != NULL) ? Valid_url : "");
+    snprintf(pfilename, sizeof(pfilename), "%s", (Valid_Image_name != NULL) ? Valid_Image_name : "");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -105,8 +106,8 @@ void test_l1_fwupgrade_hal_positive2_set_download_url(void)
 
     char pUrl[1024];
     char pfilename[256];
-    strcpy(pUrl, "http://a.com");
-    strcpy(pfilename, "AB1234_a_PROD_sey.bin");
+    snprintf(pUrl, sizeof(pUrl), "%s", "http://a.com");
+    snprintf(pfilename, sizeof(pfilename), "%s", "AB1234_a_PROD_sey.bin");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -148,7 +149,7 @@ void test_l1_fwupgrade_hal_positive3_set_download_url(void)
     // Create a pUrl with maximum buffer size
     memset(pUrl, 'a', 1023);
     pUrl[1023] = '\0';
-    strcpy(pfilename, Valid_Image_name);
+    snprintf(pfilename, sizeof(pfilename), "%s", (Valid_Image_name != NULL) ? Valid_Image_name : "");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -186,7 +187,7 @@ void test_l1_fwupgrade_hal_negative1_set_download_url(void)
 
     char *pUrl = NULL;
     char pfilename[256];
-    strcpy(pfilename, Valid_Image_name);
+    snprintf(pfilename, sizeof(pfilename), "%s", (Valid_Image_name != NULL) ? Valid_Image_name : "");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -224,7 +225,7 @@ void test_l1_fwupgrade_hal_negative2_set_download_url(void)
 
     char pUrl[1024];
     char *pfilename = NULL;
-    strcpy(pUrl, Valid_url);
+    snprintf(pUrl, sizeof(pUrl), "%s", (Valid_url != NULL) ? Valid_url : "");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -302,7 +303,7 @@ void test_l1_fwupgrade_hal_negative4_set_download_url(void)
     char pfilename[256];
     memset(pUrl, 'a', 1024);
     pUrl[1024] = '\0';
-    strcpy(pfilename, Valid_Image_name);
+    snprintf(pfilename, sizeof(pfilename), "%s", (Valid_Image_name != NULL) ? Valid_Image_name : "");
 
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
 
@@ -342,7 +343,7 @@ void test_l1_fwupgrade_hal_negative5_set_download_url(void)
 
     char pUrl[1024];
     char pfilename[257];
-    strcpy(pUrl, Valid_url);
+    snprintf(pUrl, sizeof(pUrl), "%s", (Valid_url != NULL) ? Valid_url : "");
     memset(pfilename, 'a', 256);
     pfilename[256] = '\0';
 
@@ -382,8 +383,8 @@ void test_l1_fwupgrade_hal_positive1_get_download_url(void)
     char pUrl[1024];
     char pfilename[256];
 
-    strcpy(pUrl, Valid_url);
-    strcpy(pfilename, Valid_Image_name);
+    snprintf(pUrl, sizeof(pUrl), "%s", (Valid_url != NULL) ? Valid_url : "");
+    snprintf(pfilename, sizeof(pfilename), "%s", (Valid_Image_name != NULL) ? Valid_Image_name : "");
     INT result = fwupgrade_hal_set_download_url(pUrl, pfilename);
     // Declare and initialize variables for input parameters
     char pUrl2[1024];
