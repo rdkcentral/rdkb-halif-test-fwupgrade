@@ -4,6 +4,7 @@
 
 - [Acronyms, Terms and Abbreviations](#acronyms-terms-and-abbreviations)
 - [Description](#description)
+- [Testing Environment](#testing-environment)
 - [Reference Documents](#reference-documents)
 
 ## Acronyms, Terms and Abbreviations
@@ -16,6 +17,23 @@
 
 This repository contains the Unit Test Suites (L1 and L2) for `FWUPGRADE` `HAL`.
 
+## Testing Environment
+
+### Build the linux environment from hal repo :
+
+```bash
+./build_ut.sh
+```
+
+### Build the target `crosscompile` environment from hal repo :
+
+Set the crosscompile environment
+```bash
+./build_ut.sh TARGET=`crosscompile`
+```
+let `crosscompile' is the target environment like arm ,intel ...
+
+
 ## Reference Documents
 
 <!-- Need to update links to point to correct repo -->
@@ -23,5 +41,3 @@ This repository contains the Unit Test Suites (L1 and L2) for `FWUPGRADE` `HAL`.
 |---|-------------|--------------------|-------------|
 |1|`HAL` Specification Document|This document provides specific information on the APIs for which tests are written in this module|[FirmwareManagementhalSpec.md](https://github.com/rdkcentral/rdkb-halif-fwupgrade/blob/develop/docs/pages/FirmwareManagementhalSpec.md)|
 |2|`L1` Tests | `L1` Test Case File for this module |[test_l1_fwupgrade_hal.c](https://github.com/rdkcentral/rdkb-halif-test-fwupgrade/blob/feature/gh_1_initial_test_suite/src/test_l1_fwupgrade_hal.c)|
-
-
