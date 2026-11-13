@@ -1,0 +1,13 @@
+.venv/
+**/.venv/
+**/__pycache__/
+**/.pytest_cache/
+*.py[cod]
+.env
+configs/rack.yml
+configs/*.local.yml
+artifacts/
+logs/
+build*/
+install*/
+

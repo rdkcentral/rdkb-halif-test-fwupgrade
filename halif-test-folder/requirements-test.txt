@@ -1,0 +1,4 @@
+# Python 3.10+; vendored RAFT requirements retained from TEST_MERGED.
+pytest>=8.3.5,<9
+-r third_party/python_raft/requirements.txt
+
