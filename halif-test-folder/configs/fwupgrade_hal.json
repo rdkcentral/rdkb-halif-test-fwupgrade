@@ -1,0 +1,66 @@
+{
+  "profile_name": "fwupgrade_dynamic",
+  "download_fixture": {
+    "url": "https://fwserver/firmware/download_image.wic",
+    "filename": "download_image.wic",
+    "interface": 1
+  },
+  "fwupgrade_hal_set_download_url": {
+    "columns": ["url", "filename"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": "https://fwserver/firmware/new_image.wic", "filename": "new_image.wic"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": null, "filename": "image.wic"}},
+        {"Case_ID": 2, "parameters": {"url": "https://fwserver/image.wic", "filename": null}},
+        {"Case_ID": 3, "parameters": {"url": "", "filename": "image.wic"}},
+        {"Case_ID": 4, "parameters": {"url": "https://fwserver/image.wic", "filename": ""}},
+        {"Case_ID": 5, "parameters": {"url": "@repeat:u:1025", "filename": "image.wic"}},
+        {"Case_ID": 6, "parameters": {"url": "https://fwserver/image.wic", "filename": "@repeat:f:256"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "fwupgrade_hal_get_download_url": {
+    "columns": ["pUrl", "pFilename"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pUrl": "DEFAULT", "pFilename": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pUrl": "NULL", "pFilename": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"pUrl": "DEFAULT", "pFilename": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "fwupgrade_hal_download_install": {
+    "columns": ["url"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": "https://fwserver/image.wic"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": null}},
+        {"Case_ID": 2, "parameters": {"url": ""}},
+        {"Case_ID": 3, "parameters": {"url": "https:///image.wic"}},
+        {"Case_ID": 4, "parameters": {"url": " "}},
+        {"Case_ID": 5, "parameters": {"url": "https://fwserver.company.com/image<1>.wic"}},
+        {"Case_ID": 6, "parameters": {"url": "@repeat:u:1025"}},
+        {"Case_ID": 7, "parameters": {"url": "https://192.168.100.250/firmware/image.wic"}}
+      ],
+      "expected_status": -1
+    }
+  }
+}
+

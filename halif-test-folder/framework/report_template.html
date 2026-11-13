@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>@@TITLE@@ · HAL test report</title>
+<style>
+:root{--bg:#f4f7fc;--panel:#fff;--ink:#17243b;--muted:#53647d;--line:#dce4ef;--accent:#4338ca;--green:#15803d;--red:#b91c1c;--amber:#a16207}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1380px;margin:auto;padding:32px}header{background:linear-gradient(120deg,#15264b,#3730a3);border-radius:22px;padding:32px;color:white;box-shadow:0 14px 36px #14234b20}h1{font-size:clamp(25px,4vw,40px);line-height:1.2;margin:8px 0 18px}h2{font-size:20px;margin:0 0 14px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:12px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:start}.status{background:#ffffff20;border:1px solid #ffffff60;border-radius:999px;padding:8px 16px;font-weight:750}.meta{display:flex;flex-wrap:wrap;gap:12px 28px;font-size:13px}.run{overflow-wrap:anywhere;opacity:.9}
+section{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px;margin-top:22px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:24px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;border-top:4px solid var(--accent)}.card span{display:block;text-transform:uppercase;font-size:11px;letter-spacing:.08em;color:var(--muted)}.card strong{font-size:34px;font-variant-numeric:tabular-nums}.bar{display:flex;min-height:36px;border-radius:10px;overflow:hidden;background:var(--line);gap:2px}.bar span{min-width:0;text-align:center;padding:7px;color:white;font-size:12px;overflow-wrap:anywhere}.passed{background:var(--green)}.failed,.error{background:var(--red)}.skipped{background:var(--amber)}.not_run{background:#64748b}.muted{color:var(--muted);font-size:13px}
+.tools{display:flex;flex-wrap:wrap;gap:12px;margin:18px 0}input,select,button,.link{font:inherit;padding:10px 14px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}input{flex:1;min-width:200px}button,.link{cursor:pointer}a{color:var(--accent)}.link{display:inline-block;text-decoration:none;margin:4px}.case{border:1px solid var(--line);border-radius:10px;margin:10px 0}.case > details > summary{display:grid;grid-template-columns:90px 1fr 90px 85px;gap:14px;align-items:center;padding:16px;cursor:pointer}.test-name{overflow-wrap:anywhere;font-weight:600}.badge{font-size:11px;font-weight:800;text-transform:uppercase;border-radius:7px;padding:5px 8px;background:#e2e8f0;color:#334155;text-align:center}[data-status=passed] .badge{background:#dcfce7;color:#166534}[data-status=failed] .badge,[data-status=error] .badge{background:#fee2e2;color:#991b1b}[data-status=skipped] .badge{background:#fef3c7;color:#854d0e}.detail{border-top:1px solid var(--line);padding:18px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border-radius:10px;padding:16px;font:12px/1.7 ui-monospace,monospace;max-height:480px;overflow:auto}.alert{border-left:5px solid var(--red)}footer{padding:24px 0;color:var(--muted);font-size:12px}[hidden]{display:none!important}:focus-visible{outline:3px solid #818cf8;outline-offset:3px}
+@media(max-width:700px){main{padding:14px}header,section{padding:18px}.hero{display:block}.status{display:inline-block}.case > details > summary{grid-template-columns:75px 1fr}.cards{grid-template-columns:repeat(2,1fr)}}
+@media(prefers-color-scheme:dark){:root{--bg:#111827;--panel:#1c273b;--ink:#edf2fa;--muted:#afbed4;--line:#334155;--accent:#a5b4fc}.case .badge{filter:brightness(.9)}}
+@media print{body{background:white;color:black}header{background:#eee;color:black;box-shadow:none}.tools,.links{display:none}main{padding:0;max-width:none}.card,section{break-inside:avoid}pre{max-height:none}.case[hidden]{display:block!important}}
+.stage-scroll{overflow-x:auto;margin:18px 0}.stage-table{width:100%;border-collapse:collapse;font-size:13px}.stage-table caption{text-align:left;font-size:17px;font-weight:700;margin-bottom:10px}.stage-table th,.stage-table td{padding:10px;border:1px solid var(--line);text-align:left;vertical-align:top}.stage-table td{overflow-wrap:anywhere}.stage-table tr[data-outcome=failed],.stage-table tr[data-outcome=error]{background:#b91c1c18}.stage-table tr[data-outcome=skipped]{background:#a1620718}.stage-table td:nth-child(3){font-weight:700}.stage-table details summary,.phase-diagnostics summary{cursor:pointer;padding:6px}.stage-table pre{min-width:240px;margin:6px 0}.phase-diagnostics{margin-top:14px}
+</style>
+</head>
+<body><main>
+<header><div class=hero><div><div class=eyebrow>HAL quality · execution report</div><h1>@@TITLE@@</h1></div><span class=status>@@STATUS@@</span></div>
+<p class=run>@@RUN@@</p><div class=meta><span>Started @@START@@</span><span>Finished @@END@@</span><span>@@DURATION@@ seconds</span><span>@@MODE@@ · exit @@EXIT@@</span><span>Console: @@CONSOLE@@</span></div></header>
+<div class=cards>@@CARDS@@</div>
+@@ERROR@@
+<section><h2>Results at a glance</h2><div class=bar role=img aria-label="Outcome distribution">@@SEGMENTS@@</div><p class=muted>@@EXECUTED@@ cases reached an executed outcome · pass rate among passed/failed/error outcomes: <strong>@@RATE@@</strong>. Skips and previews are not passes. @@DISCLAIMER@@</p></section>
+<section><h2>Test explorer</h2><div class=tools>
+<input id=search type=search aria-label="Search tests" placeholder="Search API, case ID, component or log text...">
+<select id=status aria-label="Filter result"><option value=all>All results</option><option value=passed>Passed</option><option value=failed>Failed</option><option value=error>Errors</option><option value=skipped>Skipped</option><option value=not_run>Not run / preview</option></select>
+<select id=component aria-label="Filter component"><option value=all>All components</option></select>
+<button id=expand type=button>Expand all</button><button id=collapse type=button>Collapse all</button></div>
+<p id=visible class=muted aria-live=polite></p><div id=cases>@@ROWS@@</div></section>
+<section><h2>Run context</h2><details><summary>Selection</summary><pre>@@SELECTION@@</pre></details><h3>Backend ownership and logs</h3><pre>@@BACKENDS@@</pre><p class=muted>Remote and reused service logs are not collected automatically. Only runner-owned services are stopped.</p></section>
+<section class=links><h2>Run files</h2><a class=link href="console.log">Console log</a><a class=link href="result.xml">Detailed XML</a><p class=muted>Keep the run folder together to preserve these links. HTML itself works offline with no external resources.</p></section>
+<footer>Private execution evidence · Review logs for sensitive data before sharing · Generated by the @@PRODUCER@@</footer>
+</main>
+<script>
+"use strict";
+const rows = Array.from(document.querySelectorAll(".case"));
+const search = document.getElementById("search");
+const statusFilter = document.getElementById("status");
+const component = document.getElementById("component");
+for (const name of [...new Set(rows.map(row => row.dataset.component))].sort()) {
+  const option = document.createElement("option");
+  option.value = name; option.textContent = name; component.appendChild(option);
+}
+function filter() {
+  let visible = 0;
+  for (const row of rows) {
+    row.hidden = !((statusFilter.value === "all" || row.dataset.status === statusFilter.value)
+      && (component.value === "all" || row.dataset.component === component.value)
+      && row.textContent.toLowerCase().includes(search.value.toLowerCase()));
+    if (!row.hidden) visible++;
+  }
+  document.getElementById("visible").textContent = visible + " of " + rows.length + " cases shown";
+}
+search.addEventListener("input", filter);
+statusFilter.addEventListener("change", filter);
+component.addEventListener("change", filter);
+document.getElementById("expand").addEventListener("click", () => rows.filter(r => !r.hidden).forEach(r => r.querySelector("details").open = true));
+document.getElementById("collapse").addEventListener("click", () => rows.forEach(r => r.querySelector("details").open = false));
+filter();
+</script>
+</body></html>
+

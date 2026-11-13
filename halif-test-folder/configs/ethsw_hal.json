@@ -1,0 +1,79 @@
+{
+  "profile_name": "ethsw_basic",
+  "CcspHalEthSwSetAgingSpeed": {
+    "columns": ["PortId", "AgingSpeed"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"PortId": 1, "AgingSpeed": 1}},
+        {"Case_ID": 2, "parameters": {"PortId": 2, "AgingSpeed": 1}},
+        {"Case_ID": 3, "parameters": {"PortId": 3, "AgingSpeed": 1}},
+        {"Case_ID": 4, "parameters": {"PortId": 4, "AgingSpeed": 1}},
+        {"Case_ID": 5, "parameters": {"PortId": 5, "AgingSpeed": 1}},
+        {"Case_ID": 6, "parameters": {"PortId": 6, "AgingSpeed": 1}},
+        {"Case_ID": 7, "parameters": {"PortId": 7, "AgingSpeed": 1}},
+        {"Case_ID": 8, "parameters": {"PortId": 8, "AgingSpeed": 1}},
+        {"Case_ID": 9, "parameters": {"PortId": 9, "AgingSpeed": 1}},
+        {"Case_ID": 10, "parameters": {"PortId": 10, "AgingSpeed": 1}},
+        {"Case_ID": 11, "parameters": {"PortId": 11, "AgingSpeed": 1}},
+        {"Case_ID": 12, "parameters": {"PortId": 12, "AgingSpeed": 1}},
+        {"Case_ID": 13, "parameters": {"PortId": 13, "AgingSpeed": 1}},
+        {"Case_ID": 14, "parameters": {"PortId": 14, "AgingSpeed": 1}},
+        {"Case_ID": 15, "parameters": {"PortId": 15, "AgingSpeed": 1}},
+        {"Case_ID": 16, "parameters": {"PortId": 16, "AgingSpeed": 1}},
+        {"Case_ID": 17, "parameters": {"PortId": 17, "AgingSpeed": 1}},
+        {"Case_ID": 18, "parameters": {"PortId": 18, "AgingSpeed": 1}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"PortId": 19, "AgingSpeed": 1}},
+        {"Case_ID": 2, "parameters": {"PortId": 20, "AgingSpeed": 1}},
+        {"Case_ID": 3, "parameters": {"PortId": -1, "AgingSpeed": 1}},
+        {"Case_ID": 4, "parameters": {"PortId": 1, "AgingSpeed": -1}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "CcspHalEthSwLocatePortByMacAddress": {
+    "columns": ["mac", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"mac": "02:00:00:00:10:01", "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"mac": "NULL", "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"mac": "02:00:00:00:10:01", "output_pointer": "NULL_PORT"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "CcspHalExtSw_ethPortConfigure": {
+    "columns": ["ifname", "WanMode"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ifname": "eth0", "WanMode": 1}},
+        {"Case_ID": 2, "parameters": {"ifname": "eth0", "WanMode": 0}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ifname": null, "WanMode": 1}},
+        {"Case_ID": 2, "parameters": {"ifname": "eth99", "WanMode": 1}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "CcspHalExtSw_getCurrentWanHWConf": {
+    "columns": ["ExpectedResult"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ExpectedResult": 0}}
+      ]
+    }
+  }
+}

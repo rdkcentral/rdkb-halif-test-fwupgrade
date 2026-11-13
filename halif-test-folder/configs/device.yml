@@ -1,0 +1,6 @@
+deviceConfig:
+  cpe1:
+    platform: "rdkb"
+    model: "Local Linux PC"
+    prompt: "RAFT_COMMAND> "
+
