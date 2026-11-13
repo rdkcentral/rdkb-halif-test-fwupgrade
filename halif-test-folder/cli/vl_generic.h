@@ -31,4 +31,3 @@ int vl_recv_frame_cancel(int, uint32_t, uint32_t, void *, uint32_t, uint32_t *, 
 int vl_cancelled(const volatile sig_atomic_t *);
 int vl_server_loop(int, const volatile sig_atomic_t *);
 #endif
-

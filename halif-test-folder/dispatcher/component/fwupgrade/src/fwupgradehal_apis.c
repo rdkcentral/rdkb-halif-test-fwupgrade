@@ -450,4 +450,3 @@ fwupgrade_vl_status_t fwupgradehal_dispatch_json(char *request, char *response, 
     return invalid_request(response, cap,
         "JSON is supported only for set_download_url, set_download_interface and download_install");
 }
-

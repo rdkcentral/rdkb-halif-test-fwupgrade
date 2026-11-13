@@ -68,4 +68,3 @@ int main(int argc, char **argv)
     unlink(path);
     return rc < 0 ? 1 : 0;
 }
-

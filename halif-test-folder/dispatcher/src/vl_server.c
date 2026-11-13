@@ -84,4 +84,3 @@ int vl_server_loop(int fd, const volatile sig_atomic_t *stop)
     }
     return 0;
 }
-

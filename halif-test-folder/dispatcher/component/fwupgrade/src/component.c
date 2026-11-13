@@ -14,4 +14,3 @@ const vl_component vl_component_config = {
     UINT32_C(0x464c5631), "status: -1\nerror: invalid HAL request payload\n",
     COMMAND, JSON
 };
-

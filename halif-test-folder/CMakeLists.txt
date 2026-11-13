@@ -21,9 +21,9 @@ set(FWUPGRADE_HAL_SYMBOLS
     fwupgrade_hal_reboot_ready fwupgrade_hal_download_reboot_now
     fwupgrade_hal_update_and_factoryreset fwupgrade_hal_download_install)
 
-foreach(component fwupgrade)
+foreach(component ethsw fwupgrade)
     string(TOUPPER ${component} component_upper)
-    set(component_dir "dispatcher")
+    set(component_dir "dispatcher/component/${component}")
     # Optional: link the server against a supplied lib<component>_hal.so instead
     # of building the stand-in from src/<component>_hal.c, e.g.
     #   cmake ... -DFWUPGRADE_HAL_LIB=/path/to/libfwupgrade_hal.so
@@ -72,4 +72,3 @@ foreach(component fwupgrade)
         install(TARGETS ${component}_hal LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
     endif()
 endforeach()
-

@@ -17,4 +17,3 @@ fwupgrade_vl_status_t fwupgradehal_dispatch_command(char *command, char *respons
 fwupgrade_vl_status_t fwupgradehal_dispatch_json(char *request, char *response,
                                                  size_t capacity);
 #endif
-

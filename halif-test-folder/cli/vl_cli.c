@@ -1,6 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include "vl_generic.h"
-#include "../dispatcher/include/vl_common.h"
+#include "../dispatcher/component/ethsw/include/vl_common.h"
+#include "../dispatcher/component/fwupgrade/include/vl_common.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -12,8 +13,7 @@ struct component_route {
 };
 
 static const struct component_route routes[] = {
-    {"bridge_util", UINT32_C(0x42564c31), "--bridge-util-api"},
-    {"ethsw",       UINT32_C(0x45564c31), "--ethsw-api"},
+    {"ethsw",       ETHSW_VL_MAGIC,       "--ethsw-api"},
     {"platform",    UINT32_C(0x50564c31), "--platform-api"},
     {"fwupgrade",   FWUPGRADE_VL_MAGIC,   "--fwupgrade-api"}
 };
@@ -204,4 +204,3 @@ int main(int argc, char **argv)
         return 2;
     return response[0] == VL_OK ? 0 : 1;
 }
-

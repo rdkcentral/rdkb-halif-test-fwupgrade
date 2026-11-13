@@ -43,4 +43,3 @@ typedef enum {
  * response payload. One request per connection. No pointers/structs on wire.
  */
 #endif
-
