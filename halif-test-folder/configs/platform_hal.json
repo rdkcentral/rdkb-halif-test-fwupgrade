@@ -1,0 +1,552 @@
+{
+  "profile_name": "platform_basic",
+  "platform_hal_GetSNMPEnable": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_SetSNMPEnable": {
+    "columns": ["value"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"value": "rgWan"}},
+        {"Case_ID": 2, "parameters": {"value": "rgDualIp"}},
+        {"Case_ID": 3, "parameters": {"value": "rgLanIp"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"value": "invalidMode"}},
+        {"Case_ID": 2, "parameters": {"value": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_GetInterfaceStats": {
+    "columns": ["ifname", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ifname": "eth0", "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"ifname": "brlan0", "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"ifname": "erouter0", "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ifname": "missing0", "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"ifname": null, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"ifname": "eth0", "output_pointer": "NULL"}},
+        {"Case_ID": 4, "parameters": {"ifname": null, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_qos_apply": {
+    "columns": ["params"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 0, "src_ip": "192.0.2.1", "dest_ip": "198.51.100.1", "src_port": 0, "dest_port": 0, "protocol": 0, "dscp_value": 0}}},
+        {"Case_ID": 2, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 0, "src_ip": "192.0.2.1", "dest_ip": "198.51.100.1", "src_port": 65535, "dest_port": 65535, "protocol": 1, "dscp_value": 63}}},
+        {"Case_ID": 3, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 1, "src_ip": "2001:db8::1", "dest_ip": "2001:db8::2", "src_port": 12345, "dest_port": 443, "protocol": 0, "dscp_value": 46}}},
+        {"Case_ID": 4, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 1, "src_ip": "::1", "dest_ip": "2001:db8::2", "src_port": 53, "dest_port": 53, "protocol": 1, "dscp_value": 1}}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"params": null}},
+        {"Case_ID": 2, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 0, "src_ip": "192.0.2.1", "dest_ip": "198.51.100.1", "src_port": 0, "dest_port": 443, "protocol": 2, "dscp_value": 0}}},
+        {"Case_ID": 3, "parameters": {"params": {"src_mac": "02:00:00:00:00:01", "ip_version": 0, "src_ip": "192.0.2.1", "dest_ip": "198.51.100.1", "src_port": 0, "dest_port": 443, "protocol": 0, "dscp_value": 64}}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getCMTSMac": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_initLed": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_LoadThermalConfig": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_setDscp": {
+    "columns": ["interfaceType", "cmd", "pDscpVals"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "10,0"}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 2, "cmd": 1, "pDscpVals": "0,65534"}},
+        {"Case_ID": 3, "parameters": {"interfaceType": 3, "cmd": 1, "pDscpVals": "46"}},
+        {"Case_ID": 4, "parameters": {"interfaceType": 4, "cmd": 1, "pDscpVals": "10"}},
+        {"Case_ID": 5, "parameters": {"interfaceType": 1, "cmd": 2, "pDscpVals": "10,0"}},
+        {"Case_ID": 6, "parameters": {"interfaceType": 2, "cmd": 1, "pDscpVals": null}},
+        {"Case_ID": 7, "parameters": {"interfaceType": 2, "cmd": 2, "pDscpVals": null}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 0, "cmd": 1, "pDscpVals": "10"}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 5, "cmd": 1, "pDscpVals": "10"}},
+        {"Case_ID": 3, "parameters": {"interfaceType": 1, "cmd": 0, "pDscpVals": "10"}},
+        {"Case_ID": 4, "parameters": {"interfaceType": 1, "cmd": 3, "pDscpVals": "10"}},
+        {"Case_ID": 5, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "65535"}},
+        {"Case_ID": 6, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "-1"}},
+        {"Case_ID": 7, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "abc"}},
+        {"Case_ID": 8, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "10,"}},
+        {"Case_ID": 9, "parameters": {"interfaceType": 1, "cmd": 1, "pDscpVals": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_resetDscpCounts": {
+    "columns": ["interfaceType"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 1}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 2}},
+        {"Case_ID": 3, "parameters": {"interfaceType": 3}},
+        {"Case_ID": 4, "parameters": {"interfaceType": 4}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 0}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 5}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getDscpClientList": {
+    "columns": ["interfaceType", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"interfaceType": 3, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 4, "parameters": {"interfaceType": 4, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"interfaceType": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"interfaceType": 5, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"interfaceType": 1, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_GetFirmwareBankInfo": {
+    "columns": ["bankIndex", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"bankIndex": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"bankIndex": 1, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"bankIndex": -1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"bankIndex": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"bankIndex": 0, "output_pointer": "NULL"}},
+        {"Case_ID": 4, "parameters": {"bankIndex": 1, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_SetWebAccessLevel": {
+    "columns": ["userIndex", "ifIndex", "value"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"userIndex": 1, "ifIndex": 1, "value": 0}},
+        {"Case_ID": 2, "parameters": {"userIndex": 1, "ifIndex": 1, "value": 7}},
+        {"Case_ID": 3, "parameters": {"userIndex": 1, "ifIndex": 1, "value": 2147483647}},
+        {"Case_ID": 4, "parameters": {"userIndex": -2147483648, "ifIndex": -2147483648, "value": 1}},
+        {"Case_ID": 5, "parameters": {"userIndex": 2147483647, "ifIndex": 2147483647, "value": 2}},
+        {"Case_ID": 6, "parameters": {"userIndex": 1, "ifIndex": 2, "value": 1}},
+        {"Case_ID": 7, "parameters": {"userIndex": 1, "ifIndex": 16, "value": 1}},
+        {"Case_ID": 8, "parameters": {"userIndex": 1, "ifIndex": 40, "value": 1}},
+        {"Case_ID": 9, "parameters": {"userIndex": 5, "ifIndex": 1, "value": 1}},
+        {"Case_ID": 10, "parameters": {"userIndex": 5, "ifIndex": 2, "value": 1}},
+        {"Case_ID": 11, "parameters": {"userIndex": 5, "ifIndex": 16, "value": 1}},
+        {"Case_ID": 12, "parameters": {"userIndex": 5, "ifIndex": 40, "value": 1}},
+        {"Case_ID": 13, "parameters": {"userIndex": 10, "ifIndex": 1, "value": 1}},
+        {"Case_ID": 14, "parameters": {"userIndex": 10, "ifIndex": 2, "value": 1}},
+        {"Case_ID": 15, "parameters": {"userIndex": 10, "ifIndex": 16, "value": 1}},
+        {"Case_ID": 16, "parameters": {"userIndex": 10, "ifIndex": 40, "value": 1}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"userIndex": 1, "ifIndex": 1, "value": 2147483648}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_GetWebAccessLevel": {
+    "columns": ["userIndex", "ifIndex", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"userIndex": 1, "ifIndex": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"userIndex": 1, "ifIndex": 1, "output_pointer": "BUFFER"}},
+        {"Case_ID": 3, "parameters": {"userIndex": -2147483648, "ifIndex": -2147483648, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 4, "parameters": {"userIndex": 2147483647, "ifIndex": 2147483647, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 5, "parameters": {"userIndex": 1, "ifIndex": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 6, "parameters": {"userIndex": 1, "ifIndex": 16, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 7, "parameters": {"userIndex": 1, "ifIndex": 40, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 8, "parameters": {"userIndex": 5, "ifIndex": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 9, "parameters": {"userIndex": 5, "ifIndex": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 10, "parameters": {"userIndex": 5, "ifIndex": 16, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 11, "parameters": {"userIndex": 5, "ifIndex": 40, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 12, "parameters": {"userIndex": 10, "ifIndex": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 13, "parameters": {"userIndex": 10, "ifIndex": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 14, "parameters": {"userIndex": 10, "ifIndex": 16, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 15, "parameters": {"userIndex": 10, "ifIndex": 40, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"userIndex": 1, "ifIndex": 1, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_initThermal": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_setFanSpeed": {
+    "columns": ["fanIndex", "fanSpeed", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"fanIndex": 0, "fanSpeed": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"fanIndex": 0, "fanSpeed": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"fanIndex": 0, "fanSpeed": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 4, "parameters": {"fanIndex": 0, "fanSpeed": 3, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 5, "parameters": {"fanIndex": 0, "fanSpeed": 4, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 6, "parameters": {"fanIndex": 1, "fanSpeed": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 7, "parameters": {"fanIndex": 1, "fanSpeed": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 8, "parameters": {"fanIndex": 1, "fanSpeed": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 9, "parameters": {"fanIndex": 1, "fanSpeed": 3, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 10, "parameters": {"fanIndex": 1, "fanSpeed": 4, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"fanIndex": 0, "fanSpeed": -1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"fanIndex": 0, "fanSpeed": 5, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"fanIndex": 0, "fanSpeed": 2, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_SetLowPowerModeState": {
+    "columns": ["state"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"state": 0}},
+        {"Case_ID": 2, "parameters": {"state": 1}},
+        {"Case_ID": 3, "parameters": {"state": 2}},
+        {"Case_ID": 4, "parameters": {"state": 3}},
+        {"Case_ID": 5, "parameters": {"state": 4}},
+        {"Case_ID": 6, "parameters": {"state": 5}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"state": -1}},
+        {"Case_ID": 2, "parameters": {"state": 6}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getLed": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_setLed": {
+    "columns": ["pValue"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pValue": {"LedColor": 0, "State": 0, "Interval": 0}}},
+        {"Case_ID": 2, "parameters": {"pValue": {"LedColor": 1, "State": 0, "Interval": 0}}},
+        {"Case_ID": 3, "parameters": {"pValue": {"LedColor": 2, "State": 1, "Interval": 5}}},
+        {"Case_ID": 4, "parameters": {"pValue": {"LedColor": 3, "State": 0, "Interval": 0}}},
+        {"Case_ID": 5, "parameters": {"pValue": {"LedColor": 4, "State": 0, "Interval": 5}}},
+        {"Case_ID": 6, "parameters": {"pValue": {"LedColor": 5, "State": 1, "Interval": 5}}},
+        {"Case_ID": 7, "parameters": {"pValue": {"LedColor": 6, "State": 1, "Interval": 5}}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pValue": {"LedColor": -1, "State": 0, "Interval": 0}}},
+        {"Case_ID": 2, "parameters": {"pValue": {"LedColor": 7, "State": 0, "Interval": 0}}},
+        {"Case_ID": 3, "parameters": {"pValue": {"LedColor": 2, "State": -1, "Interval": 5}}},
+        {"Case_ID": 4, "parameters": {"pValue": {"LedColor": 2, "State": 2, "Interval": 5}}},
+        {"Case_ID": 5, "parameters": {"pValue": {"LedColor": 2, "State": 1, "Interval": 0}}},
+        {"Case_ID": 6, "parameters": {"pValue": null}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getFanTemperature": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getInputPower": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getInputCurrent": {
+    "columns": ["output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getRadioTemperature": {
+    "columns": ["radioIndex", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"radioIndex": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"radioIndex": 1, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"radioIndex": 2, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"radioIndex": 3, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"radioIndex": 1, "output_pointer": "NULL"}},
+        {"Case_ID": 3, "parameters": {"radioIndex": 0, "output_pointer": "NULL"}},
+        {"Case_ID": 4, "parameters": {"radioIndex": 2, "output_pointer": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_getEcoModeStatus": {
+    "columns": ["radioIndex", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"radioIndex": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"radioIndex": 1, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"radioIndex": 2, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"radioIndex": 1, "output_pointer": "NULL"}},
+        {"Case_ID": 3, "parameters": {"radioIndex": 0, "output_pointer": "NULL"}},
+        {"Case_ID": 4, "parameters": {"radioIndex": 3, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 5, "parameters": {"radioIndex": -1, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_GetMACsecEnable": {
+    "columns": ["ethPort", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"ethPort": 2, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "output_pointer": "NULL"}},
+        {"Case_ID": 2, "parameters": {"ethPort": 3, "output_pointer": "NULL"}},
+        {"Case_ID": 3, "parameters": {"ethPort": -1, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_GetMACsecOperationalStatus": {
+    "columns": ["ethPort", "output_pointer"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "output_pointer": "DEFAULT"}},
+        {"Case_ID": 3, "parameters": {"ethPort": 2, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "output_pointer": "NULL"}},
+        {"Case_ID": 2, "parameters": {"ethPort": 3, "output_pointer": "NULL"}},
+        {"Case_ID": 3, "parameters": {"ethPort": -1, "output_pointer": "DEFAULT"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_SetMACsecEnable": {
+    "columns": ["ethPort", "Flag"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "Flag": 0}},
+        {"Case_ID": 2, "parameters": {"ethPort": 0, "Flag": 1}},
+        {"Case_ID": 3, "parameters": {"ethPort": 1, "Flag": 0}},
+        {"Case_ID": 4, "parameters": {"ethPort": 1, "Flag": 1}},
+        {"Case_ID": 5, "parameters": {"ethPort": 2, "Flag": 0}},
+        {"Case_ID": 6, "parameters": {"ethPort": 2, "Flag": 1}},
+        {"Case_ID": 7, "parameters": {"ethPort": 3, "Flag": 0}},
+        {"Case_ID": 8, "parameters": {"ethPort": 3, "Flag": 1}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": -1, "Flag": 1}},
+        {"Case_ID": 2, "parameters": {"ethPort": 4, "Flag": 1}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_StartMACsec": {
+    "columns": ["ethPort", "timeoutSec"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0, "timeoutSec": 0}},
+        {"Case_ID": 2, "parameters": {"ethPort": 1, "timeoutSec": 0}},
+        {"Case_ID": 3, "parameters": {"ethPort": 2, "timeoutSec": 0}},
+        {"Case_ID": 4, "parameters": {"ethPort": 3, "timeoutSec": 0}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": -1, "timeoutSec": 0}},
+        {"Case_ID": 2, "parameters": {"ethPort": 4, "timeoutSec": 0}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "platform_hal_StopMACsec": {
+    "columns": ["ethPort"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": 0}},
+        {"Case_ID": 2, "parameters": {"ethPort": 1}},
+        {"Case_ID": 3, "parameters": {"ethPort": 2}},
+        {"Case_ID": 4, "parameters": {"ethPort": 3}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"ethPort": -1}},
+        {"Case_ID": 2, "parameters": {"ethPort": 4}}
+      ],
+      "expected_status": -1
+    }
+  }
+}

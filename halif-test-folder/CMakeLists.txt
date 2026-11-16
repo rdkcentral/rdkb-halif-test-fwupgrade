@@ -21,7 +21,7 @@ set(FWUPGRADE_HAL_SYMBOLS
     fwupgrade_hal_reboot_ready fwupgrade_hal_download_reboot_now
     fwupgrade_hal_update_and_factoryreset fwupgrade_hal_download_install)
 
-foreach(component ethsw fwupgrade)
+foreach(component ethsw fwupgrade platform)
     string(TOUPPER ${component} component_upper)
     set(component_dir "dispatcher/component/${component}")
     # Optional: link the server against a supplied lib<component>_hal.so instead
@@ -56,6 +56,15 @@ foreach(component ethsw fwupgrade)
         add_library(${component}_hal SHARED ${component_dir}/src/${component}_hal.c)
         target_include_directories(${component}_hal PUBLIC ${component_dir}/include)
         target_compile_options(${component}_hal PRIVATE -Wall -Wextra -g)
+    endif()
+    if(component STREQUAL "platform")
+        if(PLATFORM_HAL_LIB)
+            target_compile_definitions(platform_hal INTERFACE
+                FEATURE_RDKB_THERMAL_MANAGER FEATURE_RDKB_LED_MANAGER)
+        else()
+            target_compile_definitions(platform_hal PUBLIC
+                FEATURE_RDKB_THERMAL_MANAGER FEATURE_RDKB_LED_MANAGER)
+        endif()
     endif()
     add_executable(${component}_vl
         dispatcher/src/vl_main.c dispatcher/src/vl_server.c

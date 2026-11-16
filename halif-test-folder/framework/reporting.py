@@ -13,6 +13,9 @@ from time import perf_counter
 import uuid
 import xml.etree.ElementTree as ET
 import pytest
+
+pytest.register_assert_rewrite("framework.core")
+
 from .core import component_of, level_of
 from .configuration import get_settings
 
@@ -420,4 +423,3 @@ def pytest_configure(config):
         if os.environ.get(CONSOLE_ENV) == "status-only" and not config.option.collectonly:
             config.option.verbose = max(1, config.option.verbose)
         config.pluginmanager.register(ReportPlugin(directory, work_directory), "hal-run-events")
-

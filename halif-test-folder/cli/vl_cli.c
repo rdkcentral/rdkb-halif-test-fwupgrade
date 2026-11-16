@@ -2,6 +2,7 @@
 #include "vl_generic.h"
 #include "../dispatcher/component/ethsw/include/vl_common.h"
 #include "../dispatcher/component/fwupgrade/include/vl_common.h"
+#include "../dispatcher/component/platform/include/vl_common.h"
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -14,7 +15,7 @@ struct component_route {
 
 static const struct component_route routes[] = {
     {"ethsw",       ETHSW_VL_MAGIC,       "--ethsw-api"},
-    {"platform",    UINT32_C(0x50564c31), "--platform-api"},
+    {"platform",    PLATFORM_VL_MAGIC,    "--platform-api"},
     {"fwupgrade",   FWUPGRADE_VL_MAGIC,   "--fwupgrade-api"}
 };
 
