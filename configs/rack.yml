@@ -1,0 +1,30 @@
+# Protected local configuration: do not commit a real password.
+# Valid local SSH authentication must be requested from the user before
+# integration can run. This placeholder does not establish login access.
+globalConfig:
+  includes:
+    deviceConfig: "./configs/device.yml"
+  local:
+    log:
+      directory: "./logs"
+      delimiter: "/"
+
+rackConfig:
+  rack1:
+    name: "rack1"
+    description: "Local Hello World RAFT setup"
+    slot1:
+      name: "slot1"
+      devices:
+        - dut:
+            ip: "127.0.0.1"
+            description: "Local Linux PC"
+            platform: "rdkb"
+            consoles:
+              - default:
+                  enabled: true
+                  type: "ssh"
+                  ip: "127.0.0.1"
+                  port: 22
+                  username: "aparnac"
+                  password: "Apc@2025"

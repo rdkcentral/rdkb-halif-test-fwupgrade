@@ -1,0 +1,86 @@
+{
+  "profile_name": "fwupgrade_dynamic",
+  "download_fixture": {
+    "url": "https://fwserver/firmware/download_image.wic",
+    "filename": "download_image.wic",
+    "interface": 1
+  },
+  "l2_timing": {
+    "download_call_timeout_seconds": 120,
+    "completion_timeout_seconds": 600,
+    "poll_interval_seconds": 2,
+    "failure_status_timeout_seconds": 60,
+    "in_progress_timeout_seconds": 60,
+    "reboot_settle_seconds": 10,
+    "reboot_timeout_seconds": 300
+  },
+  "l2_scenarios": {
+    "invalid_url_format": {"url": "https:///image.wic", "filename": "image.wic"},
+    "hostname_resolution_failure": {"url": "https://invalid-fw-server/image.wic", "filename": "image.wic"},
+    "http_server_unreachable": {"url": "https://192.168.100.250/firmware/image.wic", "filename": "image.wic"},
+    "firmware_file_absent": {"url": "https://fwserver/firmware/missing_image.wic", "filename": "missing_image.wic"},
+    "hw_type_mismatch": {"url": "https://fwserver/firmware/hw_type_mismatch_image.wic", "filename": "hw_type_mismatch_image.wic", "note": "placeholder: image built for another hardware type"},
+    "hw_mask_mismatch": {"url": "https://fwserver/firmware/hw_mask_mismatch_image.wic", "filename": "hw_mask_mismatch_image.wic", "note": "placeholder: image with a mismatching hardware mask"},
+    "firmware_downgrade": {"url": "https://fwserver/firmware/older_revision_image.wic", "filename": "older_revision_image.wic", "note": "placeholder: image with a lower revision than the running firmware"},
+    "corrupted_image_header": {"url": "https://fwserver/firmware/corrupted_header_image.wic", "filename": "corrupted_header_image.wic", "note": "placeholder: image with a corrupted header"},
+    "invalid_cvc_signature": {"url": "https://fwserver/firmware/invalid_cvc_image.wic", "filename": "invalid_cvc_image.wic", "note": "placeholder: image with an invalid CVC signature"},
+    "network_interruption": {"url": "https://fwserver/firmware/large_image.wic", "filename": "large_image.wic", "note": "placeholder: valid image on a server/path where the transfer is interrupted"}
+  },
+  "fwupgrade_hal_set_download_url": {
+    "columns": ["url", "filename"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": "https://fwserver/firmware/new_image.wic", "filename": "new_image.wic"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": null, "filename": "image.wic"}},
+        {"Case_ID": 2, "parameters": {"url": "https://fwserver/image.wic", "filename": null}},
+        {"Case_ID": 3, "parameters": {"url": "", "filename": "image.wic"}},
+        {"Case_ID": 4, "parameters": {"url": "https://fwserver/image.wic", "filename": ""}},
+        {"Case_ID": 5, "parameters": {"url": "@repeat:u:1025", "filename": "image.wic"}},
+        {"Case_ID": 6, "parameters": {"url": "https://fwserver/image.wic", "filename": "@repeat:f:256"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "fwupgrade_hal_get_download_url": {
+    "columns": ["pUrl", "pFilename"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pUrl": "DEFAULT", "pFilename": "DEFAULT"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"pUrl": "NULL", "pFilename": "DEFAULT"}},
+        {"Case_ID": 2, "parameters": {"pUrl": "DEFAULT", "pFilename": "NULL"}}
+      ],
+      "expected_status": -1
+    }
+  },
+  "fwupgrade_hal_download_install": {
+    "columns": ["url"],
+    "valid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": "https://fwserver/image.wic"}}
+      ],
+      "expected_status": 0
+    },
+    "invalid": {
+      "cases": [
+        {"Case_ID": 1, "parameters": {"url": null}},
+        {"Case_ID": 2, "parameters": {"url": ""}},
+        {"Case_ID": 3, "parameters": {"url": "https:///image.wic"}},
+        {"Case_ID": 4, "parameters": {"url": " "}},
+        {"Case_ID": 5, "parameters": {"url": "https://fwserver.company.com/image<1>.wic"}},
+        {"Case_ID": 6, "parameters": {"url": "@repeat:u:1025"}},
+        {"Case_ID": 7, "parameters": {"url": "https://192.168.100.250/firmware/image.wic"}}
+      ],
+      "expected_status": -1
+    }
+  }
+}
