@@ -26,5 +26,5 @@ rackConfig:
                   type: "ssh"
                   ip: "127.0.0.1"
                   port: 22
-                  username: "aparnac"
-                  password: "Apc@2025"
+                  username: ""
+                  password: ""
