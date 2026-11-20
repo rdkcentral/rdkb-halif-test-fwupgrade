@@ -59,7 +59,7 @@ foreach(component fwupgrade)
     endif()
     add_executable(${component}_vl
         dispatcher/src/vl_main.c dispatcher/src/vl_server.c
-        ${component_dir}/src/component.c ${component_dir}/src/${component}hal_apis.c)
+        ${component_dir}/src/${component}hal_apis.c)
     target_compile_definitions(${component}_vl PRIVATE VL_SERVER)
     target_compile_options(${component}_vl PRIVATE -Wall -Wextra -g)
     target_link_libraries(${component}_vl PRIVATE vl_transport ${component}_hal ${COMMON_LIB})

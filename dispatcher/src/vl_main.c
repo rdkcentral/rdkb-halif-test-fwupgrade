@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include "vl_generic.h"
-
+#include "fwupgradehal_apis.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -8,6 +8,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* The HAL dispatchers return fwupgrade_vl_status_t; adapt to the int callbacks. */
+static int dispatch_command(char *command, char *response, size_t capacity)
+{
+    return (int)fwupgradehal_dispatch_command(command, response, capacity);
+}
+
+static int dispatch_json(char *request, char *response, size_t capacity)
+{
+    return (int)fwupgradehal_dispatch_json(request, response, capacity);
+}
+
+const vl_component vl_component_config = {
+    "fwupgrade", "--api", "FWUPGRADE_VL_SOCKET_PATH", "/tmp/fwupgrade_vl-run.sock",
+    UINT32_C(0x464c5631), "status: -1\nerror: invalid HAL request payload\n",
+    dispatch_command, dispatch_json
+};
 
 static volatile sig_atomic_t stopped;
 

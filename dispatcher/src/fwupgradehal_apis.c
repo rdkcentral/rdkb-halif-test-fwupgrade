@@ -278,7 +278,7 @@ fwupgrade_vl_status_t fwupgradehal_dispatch_command(char *command, char *respons
                 return invalid_request(response, cap, "multiple commands");
             name = "list";
         } else {
-            /* All HAL APIs use the same --fwupgrade-api selector. */
+            /* All HAL APIs use the same --api selector. */
             if (strncmp(token, "--", 2) != 0 || !token[2])
                 return invalid_request(response, cap,
                                        "expected --key=value or --key value");
@@ -295,7 +295,7 @@ fwupgrade_vl_status_t fwupgradehal_dispatch_command(char *command, char *respons
             if (!value || !*value || strncmp(value, "--", 2) == 0)
                 return invalid_request(response, cap, "missing option value");
 
-            if (strcmp(key, "fwupgrade-api") == 0) {
+            if (strcmp(key, "api") == 0) {
                 if (name)
                     return invalid_request(response, cap, "multiple commands");
                 name = value;

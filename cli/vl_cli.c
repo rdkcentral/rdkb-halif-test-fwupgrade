@@ -5,22 +5,11 @@
 #include <string.h>
 #include <unistd.h>
 
-struct component_route {
-    const char *name;
-    uint32_t magic;
-    const char *selector;
-};
-
-static const struct component_route routes[] = {
-    {"fwupgrade",   FWUPGRADE_VL_MAGIC,   "--fwupgrade-api"}
-};
-
 static void usage(const char *program)
 {
-    printf("Usage: %s --component=NAME --socket=PATH "
+    printf("Usage: %s --socket=PATH "
            "(--api=NAME [--FIELD=VALUE ...] [--json=JSON] | --list-apis)\n"
-           "Components: fwupgrade.\n"
-           "Magic and API selector are resolved internally.\n"
+           "FWUpgrade HAL CLI; protocol settings are fixed internally.\n"
            "Exit: 0 success, 1 HAL/transport failure, 2 invalid request.\n",
            program);
 }
@@ -45,22 +34,20 @@ static int append(unsigned char *request, size_t *used, const char *s)
 
 
 /* PUBLIC_INTERFACE */
-/** Forward one request using explicit endpoint, protocol and server selector. */
+/** Forward one FWUpgrade request to the explicitly selected socket. */
 int main(int argc, char **argv)
 {
-    const char *path = NULL, *component_name = NULL, *selector = NULL;
+    const char *path = NULL;
     const char *api_name = NULL, *json = NULL;
-    const struct component_route *route = NULL;
     struct { const char *name; const char **value; } options[] = {
         {"--socket", &path},
-        {"--component", &component_name},
         {"--api", &api_name},
         {"--json", &json}
     };
     unsigned char request[VL_MAX_PAYLOAD] = {VL_REQ_HAL, 0};
     unsigned char response[VL_MAX_PAYLOAD];
     size_t used = 1, j;
-    uint32_t size, magic;
+    uint32_t size;
 
     int i, fd, listing = 0, fields = 0;
     for (i = 1; i < argc; ++i) {
@@ -75,7 +62,7 @@ int main(int argc, char **argv)
                 (argv[i][n] && argv[i][n] != '='))
                 continue;
             if (*options[j].value) {
-                fprintf(stderr, "Duplicate routing/API/JSON option\n");
+                fprintf(stderr, "Duplicate socket/API/JSON option\n");
                 return 2;
             }
             if (argv[i][n] == '=')
@@ -96,12 +83,14 @@ int main(int argc, char **argv)
         }
         if (j < sizeof(options) / sizeof(options[0]))
             continue;
-        if (!strcmp(argv[i], "--magic") ||
+        if (!strcmp(argv[i], "--component") ||
+            !strncmp(argv[i], "--component=", sizeof("--component=") - 1) ||
+            !strcmp(argv[i], "--magic") ||
             !strncmp(argv[i], "--magic=", sizeof("--magic=") - 1) ||
             !strcmp(argv[i], "--api-option") ||
             !strncmp(argv[i], "--api-option=", sizeof("--api-option=") - 1)) {
             fprintf(stderr,
-                    "Use --component; --magic and --api-option are no longer supported\n");
+                    "--component, --magic and --api-option are not supported; this CLI is FWUpgrade-only\n");
             return 2;
         }
         if (!strcmp(argv[i], "--list-apis")) {
@@ -117,42 +106,13 @@ int main(int argc, char **argv)
         }
         fields = 1;
     }
-    if (!path || !component_name ||
+    if (!path ||
         (listing ? (api_name || json || fields) : !api_name) ||
         (api_name && !token(api_name)) || (json && fields)) {
         usage(argv[0]);
         return 2;
     }
 
-    for (j = 0; j < sizeof(routes) / sizeof(routes[0]); ++j) {
-        if (!strcmp(component_name, routes[j].name)) {
-            route = &routes[j];
-            break;
-        }
-    }
-
-    if (!route) {
-        fprintf(stderr, "Unknown component: %s\n", component_name);
-        return 2;
-    }
-
-    magic = route->magic;
-    selector = route->selector;
-    if (fields) {
-        const char *cursor = (const char *)request + 1;
-        size_t n = strlen(selector);
-        while (*cursor) {
-            if (!strncmp(cursor, selector, n) &&
-                (!cursor[n] || cursor[n] == '=' || cursor[n] == ' ')) {
-                fprintf(stderr, "Use --api, not the wire API selector\n");
-                return 2;
-            }
-            cursor = strchr(cursor, ' ');
-            if (!cursor)
-                break;
-            ++cursor;
-        }
-    }
     if (json) {
         int length = snprintf((char *)request + 1, sizeof(request) - 1,
                               "%s\n%s", api_name, json);
@@ -165,7 +125,7 @@ int main(int argc, char **argv)
     } else if (listing) {
         if (append(request, &used, "--list-apis") < 0)
             return 2;
-    } else if (append(request, &used, selector) < 0 ||
+    } else if (append(request, &used, "--api") < 0 ||
                append(request, &used, api_name) < 0) {
         fprintf(stderr, "Request too large\n");
         return 2;
@@ -175,9 +135,9 @@ int main(int argc, char **argv)
         perror("Connect to VL");
         return 1;
     }
-    if (vl_send_frame(fd, magic, VL_MSG_REQUEST, request,
+    if (vl_send_frame(fd, FWUPGRADE_VL_MAGIC, VL_MSG_REQUEST, request,
                               (uint32_t)used + 1) < 0 ||
-        vl_recv_frame(fd, magic, VL_MSG_RESPONSE, response,
+        vl_recv_frame(fd, FWUPGRADE_VL_MAGIC, VL_MSG_RESPONSE, response,
                               sizeof(response), &size) < 0) {
         perror("VL exchange");
         close(fd);

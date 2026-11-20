@@ -85,7 +85,7 @@ def startup(component):
     return [str(component.server), f"--socket={component.socket_path}"]
 
 def build_command(component, api, parameters_json=None, *, output_pointer=None, parameters=None):
-    """Build one shared-CLI request with explicit component routing settings."""
+    """Build one FWUpgrade CLI request using the configured executable and socket."""
     if parameters is not None:
         if not isinstance(parameters, dict):
             raise ValueError("parameters must be a field-name mapping")
@@ -104,7 +104,6 @@ def build_command(component, api, parameters_json=None, *, output_pointer=None, 
     settings = component
     args = [
         settings.cli,
-        f"--component={settings.name}",
         f"--socket={settings.socket_path}",
         "--api=" + api,
     ]

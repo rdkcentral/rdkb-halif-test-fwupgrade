@@ -24,7 +24,7 @@ typedef enum {
  * Wire header: three network-byte-order uint32_t words: magic, type, size.
  * ACK: the same header with type=ACK and size=0.
  * Request payload: HAL request byte (1), followed by a NUL-terminated
- * command string: "--fwupgrade-api=NAME [--FIELD=VALUE ...]" or
+ * command string: "--api=NAME [--FIELD=VALUE ...]" or
  * "--list-apis". HAL calls have no API-specific shortcuts.
  * Value-bearing options also accept "--key value". Tokens must not contain
  * whitespace; socket selection is CLI-local and never part of the payload.

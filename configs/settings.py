@@ -25,5 +25,5 @@ def create_component(controller_root):
         log=root / "logs/fwupgrade/backend.log",
         command_builder=execution.build_command, readiness=execution.responsive,
         startup=execution.startup, preflight=execution.preflight,
-        options={"selector": "--fwupgrade-api", "magic": 0x464c5631},
+        options={"selector": "--api", "magic": 0x464c5631},
     )
