@@ -30,7 +30,9 @@ typedef struct {
 } vl_component;
 extern const vl_component vl_component_config;
 #define VL_MAX_PAYLOAD 8192U
-#define VL_TIMEOUT_MS 10000
+#define VL_TIMEOUT_MS 10000 /* default deadline; override with vl_set_timeout_ms() */
+#define VL_MIN_TIMEOUT_MS 1000
+#define VL_MAX_TIMEOUT_MS 300000
 #define VL_DEFAULT_SOCKET_PATH (vl_component_config.default_socket)
 #define VL_MSG_ACK 2U
 #define VL_MSG_REQUEST 3U
@@ -41,6 +43,7 @@ extern const vl_component vl_component_config;
 #define VL_INVALID_REQUEST 1
 #define VL_HAL_ERROR 2
 int vl_connect(const char *);
+int vl_set_timeout_ms(int);
 int vl_create_server(const char *);
 int vl_send_frame(int, uint32_t, uint32_t, const void *, uint32_t);
 int vl_recv_frame(int, uint32_t, uint32_t, void *, uint32_t, uint32_t *);

@@ -30,7 +30,8 @@ import sys
 import tempfile
 from time import perf_counter
 from .configuration import get_settings
-from .reporting import RUN_ENV, assert_equal, emit, private_write, redact
+from .reporting import (RUN_ENV, assert_equal, emit, mask_fields, private_write, redact,
+                        register_secret)
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,31 @@ PROBE_TIMEOUT_SECONDS = 0.5
 MIN_COMMAND_TIMEOUT_SECONDS = 1
 MAX_COMMAND_TIMEOUT_SECONDS = 300
 BRIDGE_STARTUP_GRACE_SECONDS = 90
+# vl_cli --timeout is set this much below the RAFT budget so the CLI reports its own
+# timeout before the bridge gives up on the whole command.
+CLI_TIMEOUT_MARGIN_SECONDS = 5
+# Reboot-aware calls (see run_reboot): settle after the call, then poll the backend.
+REBOOT_RECOVERY_DEFAULTS = {"settle_seconds": 5, "timeout_seconds": 300,
+                            "poll_interval_seconds": 5}
+BOOT_ID_COMMAND = "cat /proc/sys/kernel/random/boot_id"
+BOOT_ID_PATTERN = re.compile(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}")
+BACKEND_PROBE_TIMEOUT_SECONDS = 15
+# A RAFT session that fails before the command is sent (SSH shell not ready) is retried:
+# nothing ran on the DUT, so repeating it is safe. Total attempts = 1 + retries.
+BRIDGE_PRESEND_RETRIES = 2
+BRIDGE_PRESEND_RETRY_DELAY_SECONDS = 2
+# Profile "factory_reset_recovery": reprovisioning hooks for destructive resets.
+REPROVISION_DEFAULTS = {"host_command": "", "dut_command": "",
+                        "command_timeout_seconds": 60, "backend_grace_seconds": 30}
+# Set when a destructive call left the DUT unrecovered; later tests are skipped.
+_UNRECOVERED = []
 MAX_EXIT_CODE = 255
 PRIVATE_FILE_UMASK = 0o077
 PRIVATE_DIR_MODE = 0o700
+
+
+class BridgeNotSentError(RuntimeError):
+    """RAFT bridge failure before the command reached the DUT (safe to retry)."""
 
 
 # VL command construction and backend readiness
@@ -100,8 +123,22 @@ def responsive(component):
 def startup(component):
     return [str(component.server), f"--socket={component.socket_path}"]
 
-def build_command(component, api, parameters_json=None, *, output_pointer=None, parameters=None):
-    """Build one shared-CLI request with explicit component routing settings."""
+def _check_timeout(timeout_seconds):
+    if (type(timeout_seconds) is not int
+            or not MIN_COMMAND_TIMEOUT_SECONDS <= timeout_seconds <= MAX_COMMAND_TIMEOUT_SECONDS):
+        raise ValueError(
+            f"timeout_seconds must be an integer between {MIN_COMMAND_TIMEOUT_SECONDS} "
+            f"and {MAX_COMMAND_TIMEOUT_SECONDS}")
+
+
+def build_command(component, api, parameters_json=None, *, output_pointer=None, parameters=None,
+                  timeout_seconds=None):
+    """Build one shared-CLI request with explicit component routing settings.
+
+    timeout_seconds, when given, becomes the CLI's own --timeout (transport deadline).
+    """
+    if timeout_seconds is not None:
+        _check_timeout(timeout_seconds)
     if parameters is not None:
         if not isinstance(parameters, dict):
             raise ValueError("parameters must be a field-name mapping")
@@ -110,7 +147,7 @@ def build_command(component, api, parameters_json=None, *, output_pointer=None, 
         for name, value in parameters.items():
             if (not isinstance(name, str)
                     or re.fullmatch(r"[a-zA-Z][a-zA-Z0-9_-]*", name) is None
-                    or name in {"json", "socket", "magic", "component", "api-option", "api", "help", "output-pointer", "list-apis"}
+                    or name in {"json", "socket", "magic", "component", "api-option", "api", "help", "output-pointer", "list-apis", "timeout"}
                     or name.endswith("-api")
                     or "--" + name == component.options["selector"]):
                 raise ValueError("Invalid or reserved CLI field name")
@@ -128,6 +165,8 @@ def build_command(component, api, parameters_json=None, *, output_pointer=None, 
         args.append(f"--json={parameters_json}")
     for name, value in (parameters or {}).items():
         args.append(f"--{name}={value}")
+    if timeout_seconds is not None:
+        args.append(f"--timeout={timeout_seconds}")
     if output_pointer is not None:
         args.append(f"--output-pointer={output_pointer}")
     # Quote each argv item for the target POSIX shell, preserving JSON quotes
@@ -143,15 +182,34 @@ def preflight(component):
 # Testcase execution and state restoration
 
 # Used by: L1, L2, and future levels.
-def command(component, api, parameters_json=None, *, output_pointer=None, parameters=None):
+def command(component, api, parameters_json=None, *, output_pointer=None, parameters=None,
+            timeout_seconds=None):
     """Delegate request encoding to the configured component adapter."""
     settings = get_settings().components[component]
+    extra = {} if timeout_seconds is None else {"timeout_seconds": timeout_seconds}
     return settings.command_builder(settings, api, parameters_json,
-        output_pointer=output_pointer, parameters=parameters)
+        output_pointer=output_pointer, parameters=parameters, **extra)
+
+def sensitive_fields(component, api):
+    """Response fields of api that carry secrets, from the component's options.
+
+    A component declares them as options["sensitive_output"] = {api: ["field", ...]} (or
+    {api: "*"} for every field except status). Returns None for ordinary APIs.
+    """
+    declared = get_settings().components[component].options.get("sensitive_output") or {}
+    fields = declared.get(api)
+    return fields if fields else None
+
 
 # Used by: L1, L2, and future levels.
-def run(component, raft_env, api, parameters_json=None, *, output_pointer=None, parameters=None):
+def run(component, raft_env, api, parameters_json=None, *, output_pointer=None, parameters=None,
+        timeout_seconds=None):
     """Execute the constructed CLI command using the configured RAFT transport.
+
+    timeout_seconds is the whole-operation budget (1..300) for long firmware calls such as
+    download or install. It is the RAFT command timeout, and the CLI receives
+    --timeout=<budget - CLI_TIMEOUT_MARGIN_SECONDS> so it keeps waiting for the HAL result.
+    Omit it for ordinary calls (CLI default 10 s, RAFT default 30 s).
 
     Return {"output": text, "returncode": int}; nonzero CLI exits remain data
     so negative tests can inspect them. Transport/capture failures raise.
@@ -163,7 +221,18 @@ def run(component, raft_env, api, parameters_json=None, *, output_pointer=None, 
             payload = json.loads(parameters_json)
         except (ValueError, TypeError):
             pass  # Malformed JSON may be an intentional test input.
+    secret_fields = sensitive_fields(component, api)
+    if secret_fields and isinstance(payload, dict):
+        # Request values for sensitive fields must not reach logs or reports either.
+        for name, value in payload.items():
+            if secret_fields == "*" or name in secret_fields:
+                register_secret(value)
     inputs = {"api": api}
+    cli_timeout = None
+    if timeout_seconds is not None:
+        _check_timeout(timeout_seconds)
+        cli_timeout = max(1, timeout_seconds - CLI_TIMEOUT_MARGIN_SECONDS)
+        inputs["timeout_seconds"] = timeout_seconds
     if parameters_json is not None:
         inputs["payload"] = payload
     if parameters is not None and parameters != {}:
@@ -173,7 +242,7 @@ def run(component, raft_env, api, parameters_json=None, *, output_pointer=None, 
     emit("INPUT", inputs)
     try:
         cmd = command(component, api, parameters_json, output_pointer=output_pointer,
-                      parameters=parameters)
+                      parameters=parameters, timeout_seconds=cli_timeout)
     except Exception as exc:
         emit("COMMAND", str(exc), "error")
         raise
@@ -181,16 +250,228 @@ def run(component, raft_env, api, parameters_json=None, *, output_pointer=None, 
     logger.info("CLI Command: %s", cmd)
     started = perf_counter()
     try:
-        result = raft_env.run_command_result(cmd)
+        result = (raft_env.run_command_result(cmd) if timeout_seconds is None
+                  else raft_env.run_command_result(cmd, timeout=timeout_seconds))
     except Exception as exc:
         emit("RAFT", str(exc), "error", perf_counter() - started)
         raise
     code = result["returncode"]
     emit("RAFT", f"capture=complete | cli_exit={code} (observed)",
          "complete", perf_counter() - started)
-    emit("RESPONSE", result["output"])
-    logger.info("CLI Response:\n%s", result["output"])
+    shown = result["output"]
+    if secret_fields:
+        # API-aware masking: the caller still gets the real output, but only the masked
+        # text is emitted/logged, and the removed values are masked on every other path
+        # (assertion messages, tracebacks, XML/HTML reports) by redact().
+        shown, secrets = mask_fields(shown, secret_fields)
+        for secret in secrets:
+            register_secret(secret)
+    emit("RESPONSE", shown)
+    logger.info("CLI Response:\n%s", shown)
     return result
+
+# Reboot-aware execution
+
+def _recovery_settings(recovery):
+    unknown = set(recovery or {}) - set(REBOOT_RECOVERY_DEFAULTS)
+    if unknown:
+        raise ValueError(f"Unknown reboot_recovery keys: {sorted(unknown)}")
+    merged = {**REBOOT_RECOVERY_DEFAULTS, **(recovery or {})}
+    for key, value in merged.items():
+        minimum_ok = value >= 0 if key == "settle_seconds" else value > 0
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or not minimum_ok:
+            kind = "non-negative" if key == "settle_seconds" else "positive"
+            raise ValueError(f"reboot_recovery.{key} must be a {kind} number")
+    return merged
+
+
+def _reprovision_settings(reprovision):
+    unknown = set(reprovision or {}) - set(REPROVISION_DEFAULTS)
+    if unknown:
+        raise ValueError(f"Unknown factory_reset_recovery keys: {sorted(unknown)}")
+    merged = {**REPROVISION_DEFAULTS, **(reprovision or {})}
+    for key in ("host_command", "dut_command"):
+        if not isinstance(merged[key], str):
+            raise ValueError(f"factory_reset_recovery.{key} must be a string")
+    for key in ("command_timeout_seconds", "backend_grace_seconds"):
+        value = merged[key]
+        if not isinstance(value, (int, float)) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"factory_reset_recovery.{key} must be a positive number")
+    return merged
+
+
+def unrecovered_reason():
+    """Why the DUT is unusable after a failed recovery, or None while it is healthy."""
+    return _UNRECOVERED[0] if _UNRECOVERED else None
+
+
+def _mark_unrecovered(reason):
+    if not _UNRECOVERED:
+        _UNRECOVERED.append(reason)
+
+
+def boot_id(raft_env):
+    """DUT boot identifier (changes on every reboot), or None when it cannot be read."""
+    for _ in range(2):
+        try:
+            result = raft_env.run_command_result(BOOT_ID_COMMAND,
+                                                 timeout=BACKEND_PROBE_TIMEOUT_SECONDS)
+        except RuntimeError:
+            continue
+        match = BOOT_ID_PATTERN.search(result["output"]) if result["returncode"] == 0 else None
+        if match:
+            return match.group(0).lower()
+    return None
+
+
+def wait_for_backend(component, raft_env, *, timeout_seconds, poll_interval_seconds):
+    """Poll the DUT backend through fresh RAFT sessions until it answers --list-apis.
+
+    Every RAFT command opens a new session, so this is also the reconnect wait after a
+    reboot. Returns the number of probes; raises RuntimeError if the backend does not
+    come back within timeout_seconds. Provisioning must restart the backend on boot.
+    """
+    settings = get_settings().components[component]
+    probe = shlex.join([settings.cli, f"--component={settings.name}",
+                        f"--socket={settings.socket_path}", "--list-apis"])
+    deadline = time.monotonic() + timeout_seconds
+    attempts = 0
+    while True:
+        attempts += 1
+        try:
+            result = raft_env.run_command_result(probe, timeout=BACKEND_PROBE_TIMEOUT_SECONDS)
+            if result["returncode"] == 0 and "status: 0" in result["output"]:
+                return attempts
+        except RuntimeError:
+            pass  # DUT still down or SSH not up yet.
+        if time.monotonic() + poll_interval_seconds > deadline:
+            raise RuntimeError(f"{component} backend did not recover within "
+                               f"{timeout_seconds}s after the reboot call")
+        time.sleep(poll_interval_seconds)
+
+
+def wait_for_management(raft_env, *, timeout_seconds, poll_interval_seconds):
+    """Wait until the DUT answers over RAFT/SSH again (boot id readable)."""
+    deadline = time.monotonic() + timeout_seconds
+    while boot_id(raft_env) is None:
+        if time.monotonic() + poll_interval_seconds > deadline:
+            raise RuntimeError(f"DUT management access did not return within "
+                               f"{timeout_seconds}s; the rack configuration may no longer "
+                               "match the DUT after the reset")
+        time.sleep(poll_interval_seconds)
+
+
+def _run_host_hook(command, timeout):
+    """Run a reprovisioning command on the test host (no shell; output is redacted)."""
+    try:
+        done = subprocess.run(shlex.split(command), capture_output=True, text=True,
+                              timeout=timeout, check=False)
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError(f"host reprovision command failed: {redact(str(exc))}") from exc
+    shown = redact((done.stdout + done.stderr).strip())
+    emit("REPROVISION", f"host command exit {done.returncode}: {shown}")
+    if done.returncode != 0:
+        raise RuntimeError(f"host reprovision command exited {done.returncode}: {shown}")
+
+
+def _run_dut_hook(raft_env, command, timeout):
+    """Run a reprovisioning command on the DUT (for example start the dispatcher)."""
+    result = raft_env.run_command_result(command, timeout=timeout)
+    shown = redact(result["output"].strip())
+    emit("REPROVISION", f"DUT command exit {result['returncode']}: {shown}")
+    if result["returncode"] != 0:
+        raise RuntimeError(f"DUT reprovision command exited {result['returncode']}: {shown}")
+
+
+def _recover_backend(component, raft_env, cfg, reprovision):
+    """Wait for the backend; if it stays down, reprovision the DUT, then wait again."""
+    wait = {"timeout_seconds": cfg["timeout_seconds"],
+            "poll_interval_seconds": cfg["poll_interval_seconds"]}
+    hooks = reprovision and (reprovision["host_command"] or reprovision["dut_command"])
+    if not hooks:
+        try:
+            return wait_for_backend(component, raft_env, **wait)
+        except RuntimeError as exc:
+            if reprovision is None:
+                raise
+            raise RuntimeError(f"{exc}; set factory_reset_recovery.host_command or "
+                               "dut_command to reprovision the DUT") from exc
+    try:
+        grace = {**wait, "timeout_seconds": reprovision["backend_grace_seconds"]}
+        return wait_for_backend(component, raft_env, **grace)
+    except RuntimeError:
+        emit("REPROVISION", "backend still down after the reset; reprovisioning the DUT")
+    limit = reprovision["command_timeout_seconds"]
+    if reprovision["host_command"]:
+        _run_host_hook(reprovision["host_command"], limit)
+    wait_for_management(raft_env, timeout_seconds=cfg["timeout_seconds"],
+                        poll_interval_seconds=cfg["poll_interval_seconds"])
+    if reprovision["dut_command"]:
+        _run_dut_hook(raft_env, reprovision["dut_command"], limit)
+    return wait_for_backend(component, raft_env, **wait)
+
+
+# Used by: L1, L2, and future levels.
+def run_reboot(component, raft_env, api, parameters_json=None, *, recovery=None,
+               reprovision=None, timeout_seconds=None):
+    """run() for an API that may reboot the DUT, then wait until the backend is back.
+
+    A real HAL drops the SSH session while rebooting, so the framed response may never
+    arrive. The call therefore:
+      1. records the DUT boot id,
+      2. issues the API; a RAFT transport/capture failure is tolerated, not trusted,
+      3. waits recovery["settle_seconds"], then polls until the backend answers again,
+      4. re-reads the boot id. A lost response is accepted only if the boot id changed
+         (the DUT really rebooted); otherwise the original failure is re-raised.
+    Callers restore state or continue with further tests only after this returns.
+
+    Returns the run() result plus "rebooted" (boot id changed) and "response_lost"
+    (no framed response; "output" is "" and "returncode" is None, so the HAL status
+    cannot be checked). With the stand-in HAL nothing reboots: the response arrives,
+    the backend answers at once and rebooted is False.
+    recovery keys (profile "reboot_recovery"): settle_seconds, timeout_seconds,
+    poll_interval_seconds.
+    reprovision (profile "factory_reset_recovery"; {} enables the hint only) is for
+    destructive resets that can wipe network/SSH settings or the dispatcher: if the
+    backend is still down after backend_grace_seconds, host_command runs on the test
+    host, the DUT is awaited over SSH, dut_command runs on the DUT, and the backend is
+    awaited again. If recovery fails the DUT is flagged unrecovered (see
+    unrecovered_reason) so later tests are skipped instead of cascading failures.
+    """
+    cfg = _recovery_settings(recovery)
+    if reprovision is not None:
+        reprovision = _reprovision_settings(reprovision)
+    before = boot_id(raft_env)
+    result, lost = None, None
+    try:
+        result = run(component, raft_env, api, parameters_json,
+                     timeout_seconds=timeout_seconds)
+    except RuntimeError as exc:
+        if not str(exc).startswith("RAFT bridge"):
+            raise
+        lost = exc
+        emit("REBOOT", f"{api}: RAFT session lost ({exc}); waiting for the DUT to recover")
+    time.sleep(cfg["settle_seconds"])
+    started = perf_counter()
+    try:
+        probes = _recover_backend(component, raft_env, cfg, reprovision)
+    except RuntimeError as exc:
+        emit("REBOOT", str(exc), "error", perf_counter() - started)
+        _mark_unrecovered(f"DUT did not recover after {api}: {exc}")
+        raise
+    after = boot_id(raft_env)
+    rebooted = before is not None and after is not None and before != after
+    if lost is not None and not rebooted:
+        emit("REBOOT", f"{api}: session lost but the DUT boot id is unchanged "
+             f"(before={before}, after={after}); not a reboot", "error")
+        raise lost
+    emit("REBOOT", f"{api}: backend responsive after {probes} probe(s) | "
+         f"rebooted={rebooted} | response_lost={lost is not None}",
+         "complete", perf_counter() - started)
+    if lost is not None:
+        return {"output": "", "returncode": None, "rebooted": True, "response_lost": True}
+    return {**result, "rebooted": rebooted, "response_lost": False}
+
 
 # Used by: L1, L2, and future levels.
 def field(response, name):
@@ -205,7 +486,7 @@ def field(response, name):
 # Used by: tests that must snapshot/restore text state (URL, filename, ...).
 def text_field(response, name):
     """Read exactly one single-line text field from CLI text, e.g. url: https://host/x."""
-    values = re.findall(rf"(?m)^{re.escape(name)}:[ \t]*(.*?)[ \t]*\r?$", response)
+    values = re.findall(rf"(?m)^{re.escape(name)}: ?([^\r\n]*)\r?$", response)
     if len(values) != 1:
         emit("PARSE", f"Expected exactly one text {name} field", "error")
     assert len(values) == 1, f"Expected exactly one text {name} field"
@@ -310,6 +591,23 @@ class RaftEnvironment:
     def run_command_result(self, command, timeout=30):
         """Return output and remote returncode after verified command completion.
 
+        A session that fails before the command is sent (for example the SSH shell was
+        not ready) is retried up to BRIDGE_PRESEND_RETRIES times, because nothing ran on
+        the DUT. Once the command was sent, failures are never retried.
+        """
+        for attempt in range(BRIDGE_PRESEND_RETRIES + 1):
+            try:
+                return self._run_command_once(command, timeout)
+            except BridgeNotSentError as exc:
+                if attempt == BRIDGE_PRESEND_RETRIES:
+                    raise RuntimeError(str(exc)) from None
+                emit("RAFT", f"{exc} before the command was sent; retrying "
+                     f"({attempt + 1}/{BRIDGE_PRESEND_RETRIES})", "warning")
+                time.sleep(BRIDGE_PRESEND_RETRY_DELAY_SECONDS)
+
+    def _run_command_once(self, command, timeout):
+        """One bridge session; raises BridgeNotSentError if the command was never sent.
+
         command is the shell-safe string built by execution.command(), including
         any adapter-encoded payload. Pass it through unchanged: do not parse,
         reserialize, or manually escape the request JSON at the transport layer.
@@ -378,6 +676,9 @@ class RaftEnvironment:
                         or error not in {"transport", "timeout", "incomplete_capture",
                                          "malformed_capture", "raft_failure"}):
                     error = "transport"
+                if (error == "transport" and isinstance(transport, dict)
+                        and transport.get("command_sent") is not True):
+                    raise BridgeNotSentError(f"RAFT bridge failure: {error}")
                 raise RuntimeError(f"RAFT bridge failure: {error}")
             code = payload.get("returncode")
             if (payload.get("completed") is not True or type(code) is not int

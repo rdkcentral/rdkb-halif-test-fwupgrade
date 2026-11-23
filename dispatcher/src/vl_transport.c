@@ -171,12 +171,27 @@ int vl_create_server(const char *path)
     return fd;
 }
 
+/* Per-exchange deadline; vl_cli raises it for long-running firmware operations. */
+static volatile int vl_timeout_ms = VL_TIMEOUT_MS;
+
+/* PUBLIC_INTERFACE */
+/** Set the connect/send/receive deadline in ms; -1 (EINVAL) when out of range. */
+int vl_set_timeout_ms(int timeout_ms)
+{
+    if (timeout_ms < VL_MIN_TIMEOUT_MS || timeout_ms > VL_MAX_TIMEOUT_MS) {
+        errno = EINVAL;
+        return -1;
+    }
+    vl_timeout_ms = timeout_ms;
+    return 0;
+}
+
 int vl_send_frame_cancel(int fd, uint32_t magic, uint32_t type, const void *data, uint32_t size,
                       const volatile sig_atomic_t *stop)
 {
     uint32_t header[3] = {htonl(magic), htonl(type), htonl(size)};
     uint32_t ack[3];
-    int64_t deadline = now_ms() + VL_TIMEOUT_MS;
+    int64_t deadline = now_ms() + vl_timeout_ms;
     if (!data || !size || size > VL_MAX_PAYLOAD ||
         (type != VL_MSG_REQUEST && type != VL_MSG_RESPONSE)) {
         errno = EINVAL;
@@ -207,7 +222,7 @@ int vl_recv_frame_cancel(int fd, uint32_t magic, uint32_t type, void *data,
     uint32_t header[3];
     uint32_t ack[3] = {htonl(magic), htonl(VL_MSG_ACK), 0};
     uint32_t length;
-    int64_t deadline = now_ms() + VL_TIMEOUT_MS;
+    int64_t deadline = now_ms() + vl_timeout_ms;
     if (!data || !size) {
         errno = EINVAL;
         return -1;
@@ -246,7 +261,7 @@ int vl_connect(const char *path)
     now = now_ms();
     if (now < 0)
         return -1;
-    deadline = now + VL_TIMEOUT_MS;
+    deadline = now + vl_timeout_ms;
     fd = new_socket();
     if (fd < 0)
         return -1;

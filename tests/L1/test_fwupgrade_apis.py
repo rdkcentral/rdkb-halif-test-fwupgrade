@@ -35,7 +35,10 @@ from contextlib import nullcontext
 import pytest
 
 from framework.core import selected_profile
-from framework.execution import assert_equal, field, restore_fields, run, text_field
+from framework.execution import (
+    assert_equal, field, restore_fields, run, run_reboot, text_field,
+)
+from framework.reporting import emit
 
 pytestmark = [pytest.mark.raft, pytest.mark.component("fwupgrade"), pytest.mark.L1]
 
@@ -53,6 +56,29 @@ def download_fixture(request):
         raise pytest.UsageError(
             "Profile requires download_fixture {url, filename, interface 0|1}")
     return fixture
+
+
+@pytest.fixture
+def reboot_recovery(request):
+    """Optional 'reboot_recovery' profile section: settle/timeout/poll seconds."""
+    recovery = selected_profile(request.config, COMPONENT).get("reboot_recovery", {})
+    if not isinstance(recovery, dict):
+        raise pytest.UsageError("Profile 'reboot_recovery' must be an object")
+    return recovery
+
+
+@pytest.fixture
+def factory_reset_recovery(request):
+    """Optional 'factory_reset_recovery' profile section: DUT reprovisioning hooks.
+
+    A factory reset can wipe network/SSH settings or the dispatcher, which restoring
+    fields cannot undo. host_command (test host) and dut_command (DUT) bring management
+    access and the backend back; see execution.run_reboot. Defaults to no hooks.
+    """
+    section = selected_profile(request.config, COMPONENT).get("factory_reset_recovery", {})
+    if not isinstance(section, dict):
+        raise pytest.UsageError("Profile 'factory_reset_recovery' must be an object")
+    return section
 
 
 def _expand(value):
@@ -85,6 +111,17 @@ def _hal(raft_env, api, payload=None, *, output_pointer=None, parameters=None):
                output_pointer=output_pointer, parameters=parameters)
 
 
+def _hal_reboot(raft_env, api, recovery, payload=None, reprovision=None):
+    """Call an API that reboots a real DUT and wait for the backend to come back.
+
+    Cleanup (restore_fields) and later tests run only after this returns, so they
+    never talk to a DUT that is still rebooting. See execution.run_reboot. Pass
+    reprovision (factory_reset_recovery) for destructive resets.
+    """
+    return run_reboot(COMPONENT, raft_env, f"fwupgrade_hal_{api}", payload,
+                      recovery=recovery, reprovision=reprovision)
+
+
 def _precondition(raft_env, api, payload=None, **kwargs):
     result = _hal(raft_env, api, payload, **kwargs)
     assert_equal(field(result["output"], "status"), 0, f"precondition {api}",
@@ -110,6 +147,22 @@ def _verify(result, case_type, expected_status, context):
     assert_equal(result["returncode"], expected_exit, "CLI exit", (
         f"{case_type}: {context}; expected CLI exit={expected_exit}, "
         f"actual={result['returncode']}"))
+
+
+def _verify_reboot(result, case_type, expected_status, context):
+    """_verify() for a reboot-aware call.
+
+    If the DUT rebooted before the framed response arrived, the HAL status cannot be
+    read; run_reboot has already proven the reboot (boot id changed) and the recovery
+    of the backend, so only the reboot itself is recorded.
+    """
+    if result["response_lost"]:
+        emit("REBOOT", f"{case_type}: {context}; response lost to the reboot, HAL status "
+             "not observable (DUT reboot and backend recovery verified)", "complete")
+        assert_equal(expected_status, 0, "reboot only follows a successful request",
+                     f"{case_type}: {context}; a lost response is only valid for status 0")
+        return
+    _verify(result, case_type, expected_status, context)
 
 
 def _pointer(selector):
@@ -335,7 +388,7 @@ def test_07_fwupgrade_reboot_ready(
     ],
 )
 def test_08_fwupgrade_download_reboot_now(
-    raft_env, download_fixture, case_type, expected_status,
+    raft_env, download_fixture, reboot_recovery, case_type, expected_status,
 ):
     with restore_fields(COMPONENT, raft_env, **INTERFACE_FIELDS), \
             restore_fields(COMPONENT, raft_env, **URL_FIELDS):
@@ -345,8 +398,10 @@ def test_08_fwupgrade_download_reboot_now(
         ready = _precondition(raft_env, "reboot_ready")
         assert_equal(field(ready["output"], "reboot_ready"), 1,
                      "precondition reboot_ready", "system must be ready (1) to reboot")
-        result = _hal(raft_env, "download_reboot_now")
-        _verify(result, case_type, expected_status, "reboot after successful upgrade")
+        # A real HAL reboots the DUT here. Wait for the backend to return before
+        # the restore_fields cleanup below (and any later test) uses it.
+        result = _hal_reboot(raft_env, "download_reboot_now", reboot_recovery)
+        _verify_reboot(result, case_type, expected_status, "reboot after successful upgrade")
 
 
 @pytest.mark.feature(name="factory_reset")
@@ -359,7 +414,8 @@ def test_08_fwupgrade_download_reboot_now(
     ],
 )
 def test_09_fwupgrade_update_and_factoryreset(
-    raft_env, download_fixture, case_type, expected_status,
+    raft_env, download_fixture, reboot_recovery, factory_reset_recovery, case_type,
+    expected_status,
 ):
     with restore_fields(COMPONENT, raft_env, **INTERFACE_FIELDS), \
             restore_fields(COMPONENT, raft_env, **URL_FIELDS):
@@ -368,8 +424,12 @@ def test_09_fwupgrade_update_and_factoryreset(
         # then the interface first (HAL spec order) so the test does not depend
         # on the library's defaults; both are restored afterwards.
         _configure_download(raft_env, download_fixture)
-        result = _hal(raft_env, "update_and_factoryreset")
-        _verify(result, case_type, expected_status, "update and factory reset")
+        # A successful factory reset can wipe network/SSH settings or the dispatcher.
+        # Recover and reprovision the DUT (factory_reset_recovery hooks) before the
+        # URL/interface restore above runs and before any later test starts.
+        result = _hal_reboot(raft_env, "update_and_factoryreset", reboot_recovery,
+                             reprovision=factory_reset_recovery)
+        _verify_reboot(result, case_type, expected_status, "update and factory reset")
 
 
 # ---------------------------------------------------------------------------
@@ -384,7 +444,7 @@ def test_09_fwupgrade_update_and_factoryreset(
     expected={"expected_status": "expected_status"},
 )
 def test_10_fwupgrade_download_install(
-    raft_env, download_fixture, api_name, case_type, url, expected_status,
+    raft_env, download_fixture, reboot_recovery, api_name, case_type, url, expected_status,
 ):
     """Validate direct install using cases from the selected JSON profile.
 
@@ -398,5 +458,11 @@ def test_10_fwupgrade_download_install(
         _precondition(raft_env, "set_download_interface",
                       _json(interface=download_fixture["interface"]))
         url = _expand(url)
-        result = run(COMPONENT, raft_env, api_name, _json(url=url))
-        _verify(result, case_type, expected_status, f"url={url!r:.60}")
+        if expected_status == 0:
+            # A successful install may reboot a real DUT; rejected installs never do.
+            result = run_reboot(COMPONENT, raft_env, api_name, _json(url=url),
+                                recovery=reboot_recovery)
+            _verify_reboot(result, case_type, expected_status, f"url={url!r:.60}")
+        else:
+            result = run(COMPONENT, raft_env, api_name, _json(url=url))
+            _verify(result, case_type, expected_status, f"url={url!r:.60}")

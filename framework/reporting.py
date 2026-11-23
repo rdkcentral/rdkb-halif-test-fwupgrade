@@ -62,11 +62,61 @@ def readable_timestamp(value):
     return instant.strftime("%Y-%m-%d %H:%M:%S.") + f"{instant.microsecond // 1000:03d} UTC"
  
  
+# Literal secret values learned at run time (see register_secret). Values shorter than this are
+# not literal-masked, because masking e.g. "0" would corrupt unrelated text; the field-based
+# masking in mask_fields still covers them in the primary response.
+MIN_SECRET_LENGTH = 4
+_secret_values = set()
+
+
+def register_secret(value):
+    """Remember a sensitive value so redact() masks it on every logging/reporting path."""
+    value = str(value)
+    if len(value) >= MIN_SECRET_LENGTH:
+        _secret_values.add(value)
+
+
+def mask_fields(text, fields):
+    """API-aware masking of "name: value" response lines.
+
+    fields is an iterable of field names, or "*" for every field except status. Returns
+    (masked_text, secret_values) so callers can register the removed values.
+    """
+    text = str(text)
+    everything = fields == "*"
+    names = set() if everything else {str(name) for name in fields}
+    found = []
+
+    def mask(match):
+        name = match.group(1)
+        if (name not in names) and not (everything and name != "status"):
+            return match.group(0)
+        if match.group(3):
+            found.append(match.group(3))
+        return match.group(1) + match.group(2) + "[REDACTED]"
+
+    masked = re.sub(r"(?m)^([A-Za-z_][\w.\-]*)(:[ \t]*)([^\r\n]*?)[ \t]*(?=\r?$)", mask, text)
+    return masked, found
+
+
 def redact(text):
     text = str(text)
+    for secret in sorted(_secret_values, key=len, reverse=True):
+        text = text.replace(secret, "[REDACTED]")
     text = re.sub('(?i)("(?:password|passwd|token|secret|authorization)"\\s*:\\s*)"(?:\\\\.|[^"\\\\])*"', '\\1"[REDACTED]"', text)
-    text = re.sub(r"(?i)(password|passwd|token|secret|authorization)([\"\x27]?\s*[:=]\s*)([^\s,;]+)",
-                  r"\1\2[REDACTED]", text)
+    quoted = r'"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+
+    def mask(match):
+        # Keep surrounding quotes so JSON-style output stays well-formed.
+        value = match.group(3)
+        quote = value[0] if value[0] in "\"'" else ""
+        return match.group(1) + match.group(2) + quote + "[REDACTED]" + quote
+
+    # Authorization values may be "<scheme> <credential>" (or a quoted string),
+    # so redact the complete value rather than only its first word.
+    text = re.sub(r"(?i)(authorization)([\"\x27]?\s*[:=]\s*)(" + quoted + r"|[^\r\n]+)", mask, text)
+    # Token-style fallback: whole quoted strings, otherwise one unquoted word.
+    text = re.sub(r"(?i)(password|passwd|token|secret)([\"\x27]?\s*[:=]\s*)(" + quoted + r"|[^\s,;]+)", mask, text)
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
  
  

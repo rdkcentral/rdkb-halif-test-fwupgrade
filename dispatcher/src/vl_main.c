@@ -78,7 +78,7 @@ int main(int argc, char **argv)
         perror("Create server socket (existing paths are not overwritten)");
         return 1;
     }
-    fprintf(stderr, "%s VL MOCK server on %s (no hardware calls)\n", vl_component_config.name, path);
+    fprintf(stderr, "%s VL server on %s\n", vl_component_config.name, path);
     rc = vl_server_loop(fd, &stopped);
     if (rc < 0)
         fprintf(stderr, "Server failed: %s\n", strerror(errno));
