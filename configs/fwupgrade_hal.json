@@ -10,9 +10,7 @@
     "completion_timeout_seconds": 600,
     "poll_interval_seconds": 2,
     "failure_status_timeout_seconds": 60,
-    "in_progress_timeout_seconds": 60,
-    "reboot_settle_seconds": 10,
-    "reboot_timeout_seconds": 300
+    "in_progress_timeout_seconds": 60
   },
   "l2_scenarios": {
     "invalid_url_format": {"url": "https:///image.wic", "filename": "image.wic"},
